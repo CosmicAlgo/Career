@@ -2,16 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Radar, TrendingUp, Briefcase, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getPipelineStatus, triggerRefresh } from '@/lib/api';
-
-const navItems = [
-  { href: '/', label: 'Dashboard', icon: Radar },
-  { href: '/trends', label: 'Trends', icon: TrendingUp },
-  { href: '/jobs', label: 'Jobs', icon: Briefcase },
-  { href: '/gaps', label: 'Gaps', icon: AlertTriangle },
-];
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -48,43 +40,83 @@ export default function Navbar() {
     }
   }
 
+  const navItems = [
+    { href: '/', label: 'DASHBOARD' },
+    { href: '/trends', label: 'TRENDS' },
+    { href: '/jobs', label: 'JOBS' },
+    { href: '/gaps', label: 'GAPS' },
+  ];
+
+  const amberColor = '#fbbf24';
+  const terminalBg = '#0a0a0f';
+  const terminalBorder = '#1e1e2e';
+  const slate400 = '#94a3b8';
+  const slate500 = '#64748b';
+  const green400 = '#22c55e';
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-[#1e1e2e] bg-[#0a0a0f]/95 backdrop-blur">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between">
+    <nav style={{ 
+      position: 'sticky', 
+      top: 0, 
+      zIndex: 50, 
+      borderBottom: `1px solid ${terminalBorder}`, 
+      backgroundColor: `${terminalBg}f2`,
+      backdropFilter: 'blur(4px)'
+    }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+        <div style={{ display: 'flex', height: '56px', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative">
-              <Radar className="h-6 w-6 text-amber-400" />
-              <div className="absolute inset-0 h-6 w-6 animate-ping rounded-full bg-amber-400/20" />
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+            <div style={{ position: 'relative' }}>
+              <svg style={{ height: '24px', width: '24px', color: amberColor }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+              </svg>
             </div>
-            <span className="font-mono text-lg font-semibold text-amber-400 tracking-tight">
+            <span style={{ 
+              fontFamily: 'JetBrains Mono, monospace', 
+              fontSize: '18px', 
+              fontWeight: 600, 
+              color: amberColor,
+              letterSpacing: '-0.025em'
+            }}>
               CareerRadar
-            </span>
-            <span className="hidden sm:inline text-xs text-slate-500 font-mono">
-              v1.0.0
             </span>
           </Link>
 
           {/* Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             {navItems.map((item) => {
-              const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-mono transition-all ${
-                    isActive
-                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                      : 'text-slate-400 hover:text-amber-400 hover:bg-amber-500/5'
-                  }`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s',
+                    border: isActive ? `1px solid rgba(251, 191, 36, 0.3)` : '1px solid transparent',
+                    backgroundColor: isActive ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
+                    color: isActive ? amberColor : slate400
+                  }}
                 >
-                  <Icon className="h-4 w-4" />
                   {item.label}
                   {isActive && (
-                    <span className="ml-1 h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span style={{ 
+                      marginLeft: '4px', 
+                      height: '6px', 
+                      width: '6px', 
+                      borderRadius: '50%', 
+                      backgroundColor: amberColor,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }} />
                   )}
                 </Link>
               );
@@ -92,47 +124,66 @@ export default function Navbar() {
           </div>
 
           {/* Status & Refresh */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-xs font-mono">
-              <span className="text-slate-500">LAST SYNC:</span>
-              <span className={status?.today_ran ? 'text-green-400' : 'text-amber-400'}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
+              <span style={{ color: slate500 }}>LAST SYNC:</span>
+              <span style={{ color: status?.today_ran ? green400 : amberColor }}>
                 {lastUpdated}
               </span>
-              <span className={`h-2 w-2 rounded-full ${status?.today_ran ? 'bg-green-400 animate-pulse' : 'bg-amber-400'}`} />
+              <span style={{ 
+                height: '8px', 
+                width: '8px', 
+                borderRadius: '50%', 
+                backgroundColor: status?.today_ran ? green400 : amberColor,
+                animation: status?.today_ran ? 'pulse 2s infinite' : 'none'
+              }} />
             </div>
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#1e1e2e] bg-[#111118] text-slate-400 hover:text-amber-400 hover:border-amber-500/30 transition-all disabled:opacity-50"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: `1px solid ${terminalBorder}`,
+                backgroundColor: '#111118',
+                color: slate400,
+                fontSize: '12px',
+                fontFamily: 'JetBrains Mono, monospace',
+                cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                opacity: isRefreshing ? 0.5 : 1,
+                transition: 'all 0.2s'
+              }}
             >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline text-xs font-mono">
+              <svg 
+                style={{ height: '16px', width: '16px', animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2"
+              >
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M21 12v9m0-9h-9"/>
+              </svg>
+              <span>
                 {isRefreshing ? 'SYNCING...' : 'SYNC'}
               </span>
             </button>
           </div>
         </div>
-
-        {/* Mobile Nav */}
-        <div className="md:hidden flex items-center justify-around py-2 border-t border-[#1e1e2e]">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-mono ${
-                  isActive ? 'text-amber-400' : 'text-slate-500'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </nav>
   );
 }

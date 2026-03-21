@@ -6,7 +6,6 @@ import TrendChart from '@/components/TrendChart';
 import ScoreCard from '@/components/ScoreCard';
 import { getScoreTrends, getCurrentScore } from '@/lib/api';
 import { TrendData, ScoreResponse } from '@/lib/types';
-import { TrendingUp, Calendar } from 'lucide-react';
 
 export default function TrendsPage() {
   const [trends, setTrends] = useState<TrendData[]>([]);
@@ -49,33 +48,43 @@ export default function TrendsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
           <div>
-            <h1 className="text-2xl font-mono font-bold text-slate-200">
-              TRENDS <span className="text-amber-400">::</span> HISTORY
+            <h1 style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#e2e8f0' }}>
+              TRENDS <span style={{ color: '#fbbf24' }}>::</span> HISTORY
             </h1>
-            <p className="text-sm font-mono text-slate-500 mt-1">
+            <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', marginTop: '4px' }}>
               Score progression over time
             </p>
           </div>
           
           {/* Time range selector */}
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-slate-500" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg style={{ height: '16px', width: '16px', color: '#64748b' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
             {[7, 14, 30, 90].map(d => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
-                className={`px-3 py-1.5 rounded text-xs font-mono ${
-                  days === d 
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
-                    : 'text-slate-500 hover:text-slate-300 border border-[#1e1e2e]'
-                }`}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  border: days === d ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid #1e1e2e',
+                  backgroundColor: days === d ? 'rgba(251, 191, 36, 0.2)' : 'transparent',
+                  color: days === d ? '#fbbf24' : '#64748b',
+                  cursor: 'pointer'
+                }}
               >
                 {d}D
               </button>
@@ -84,58 +93,59 @@ export default function TrendsPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 rounded-lg border border-[#1e1e2e] bg-[#111118]">
-            <p className="text-xs font-mono text-slate-500 uppercase">Period Change</p>
-            <p className={`text-2xl font-mono font-bold ${
-              stats.overallChange >= 0 ? 'text-green-400' : 'text-red-400'
-            }`}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118' }}>
+            <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', textTransform: 'uppercase' }}>Period Change</p>
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: stats.overallChange >= 0 ? '#22c55e' : '#ef4444' }}>
               {stats.overallChange >= 0 ? '+' : ''}{stats.overallChange}
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-[#1e1e2e] bg-[#111118]">
-            <p className="text-xs font-mono text-slate-500 uppercase">Average Score</p>
-            <p className="text-2xl font-mono font-bold text-amber-400">
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118' }}>
+            <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', textTransform: 'uppercase' }}>Average Score</p>
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#fbbf24' }}>
               {stats.avgScore}
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-[#1e1e2e] bg-[#111118]">
-            <p className="text-xs font-mono text-slate-500 uppercase">Best Day</p>
-            <p className="text-2xl font-mono font-bold text-green-400">
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118' }}>
+            <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', textTransform: 'uppercase' }}>Best Day</p>
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#22c55e' }}>
               {stats.bestDay?.overall_score || 0}
             </p>
-            <p className="text-xs font-mono text-slate-600">
+            <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#475569' }}>
               {stats.bestDay?.date ? new Date(stats.bestDay.date).toLocaleDateString() : '--'}
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-[#1e1e2e] bg-[#111118]">
-            <p className="text-xs font-mono text-slate-500 uppercase">Worst Day</p>
-            <p className="text-2xl font-mono font-bold text-red-400">
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118' }}>
+            <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', textTransform: 'uppercase' }}>Worst Day</p>
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#ef4444' }}>
               {stats.worstDay?.overall_score || 0}
             </p>
-            <p className="text-xs font-mono text-slate-600">
+            <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#475569' }}>
               {stats.worstDay?.date ? new Date(stats.worstDay.date).toLocaleDateString() : '--'}
             </p>
           </div>
         </div>
 
         {/* Main Chart */}
-        <div className="rounded-lg border border-[#1e1e2e] bg-[#111118] p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-5 w-5 text-amber-400" />
-            <h2 className="text-sm font-mono font-semibold text-slate-200 uppercase">
+        <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '24px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <svg style={{ height: '20px', width: '20px', color: '#fbbf24' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+              <polyline points="17 6 23 6 23 12"/>
+            </svg>
+            <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase' }}>
               Score Trends
             </h2>
           </div>
           
           {loading ? (
-            <div className="h-[300px] flex items-center justify-center">
-              <div className="animate-pulse text-slate-500 font-mono">Loading...</div>
+            <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>Loading...</div>
             </div>
           ) : trends.length > 0 ? (
             <TrendChart data={trends} roles={roles} />
           ) : (
-            <div className="h-[300px] flex items-center justify-center text-slate-500 font-mono">
+            <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
               No trend data available
             </div>
           )}
@@ -143,7 +153,7 @@ export default function TrendsPage() {
 
         {/* Role Breakdown */}
         {currentScore && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             {Object.entries(currentScore.role_scores).map(([role, score]) => {
               const historicalScores = trends.map(t => t.role_scores[role]).filter(Boolean);
               const prevScore = historicalScores[historicalScores.length - 2];

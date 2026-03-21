@@ -6,7 +6,6 @@ import GapList from '@/components/GapList';
 import SkillHeatmap from '@/components/SkillHeatmap';
 import { getSkillGaps, getSkillTrends, getLatestSnapshot } from '@/lib/api';
 import { GapResponse, SkillTrendsResponse, SnapshotResponse } from '@/lib/types';
-import { AlertTriangle, Target, TrendingUp, BookOpen } from 'lucide-react';
 
 export default function GapsPage() {
   const [gaps, setGaps] = useState<GapResponse | null>(null);
@@ -45,99 +44,118 @@ export default function GapsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-mono font-bold text-slate-200">
-            GAPS <span className="text-amber-400">::</span> ANALYSIS
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#e2e8f0' }}>
+            GAPS <span style={{ color: '#fbbf24' }}>::</span> ANALYSIS
           </h1>
-          <p className="text-sm font-mono text-slate-500 mt-1">
+          <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', marginTop: '4px' }}>
             Skill gaps ranked by market demand
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-red-400" />
-              <span className="text-xs font-mono text-red-400 uppercase">High Priority</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <svg style={{ height: '16px', width: '16px', color: '#ef4444' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#ef4444', textTransform: 'uppercase' }}>High Priority</span>
             </div>
-            <p className="text-2xl font-mono font-bold text-red-400">
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#ef4444' }}>
               {gapStats.highPriority}
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-amber-500/20 bg-amber-500/5">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="h-4 w-4 text-amber-400" />
-              <span className="text-xs font-mono text-amber-400 uppercase">Medium Priority</span>
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.2)', backgroundColor: 'rgba(251, 191, 36, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <svg style={{ height: '16px', width: '16px', color: '#fbbf24' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#fbbf24', textTransform: 'uppercase' }}>Medium Priority</span>
             </div>
-            <p className="text-2xl font-mono font-bold text-amber-400">
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#fbbf24' }}>
               {gapStats.mediumPriority}
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-slate-500/20 bg-slate-500/5">
-            <div className="flex items-center gap-2 mb-2">
-              <BookOpen className="h-4 w-4 text-slate-400" />
-              <span className="text-xs font-mono text-slate-400 uppercase">Low Priority</span>
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid rgba(100, 116, 139, 0.2)', backgroundColor: 'rgba(100, 116, 139, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <svg style={{ height: '16px', width: '16px', color: '#94a3b8' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+              <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#94a3b8', textTransform: 'uppercase' }}>Low Priority</span>
             </div>
-            <p className="text-2xl font-mono font-bold text-slate-400">
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#94a3b8' }}>
               {gapStats.lowPriority}
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-[#1e1e2e] bg-[#111118]">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-green-400" />
-              <span className="text-xs font-mono text-green-400 uppercase">Total Mentions</span>
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <svg style={{ height: '16px', width: '16px', color: '#22c55e' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#22c55e', textTransform: 'uppercase' }}>Total Mentions</span>
             </div>
-            <p className="text-2xl font-mono font-bold text-green-400">
+            <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#22c55e' }}>
               {gapStats.totalFrequency}
             </p>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
           {/* Gap List */}
-          <div className="rounded-lg border border-[#1e1e2e] bg-[#111118] p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-mono font-semibold text-slate-200 uppercase">
+          <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase' }}>
                 Priority Skill Gaps
               </h2>
-              <span className="text-xs font-mono text-slate-500">
+              <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
                 {gaps?.gaps.length || 0} identified
               </span>
             </div>
             
             {loading ? (
-              <div className="py-8 text-center text-slate-500 font-mono">
+              <div style={{ padding: '32px 0', textAlign: 'center', fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
                 Analyzing gaps...
               </div>
             ) : gaps && gaps.gaps.length > 0 ? (
               <GapList gaps={gaps.gaps} />
             ) : (
-              <div className="py-8 text-center">
-                <AlertTriangle className="h-8 w-8 text-slate-600 mx-auto mb-2" />
-                <p className="text-sm text-slate-500 font-mono">No gaps identified yet</p>
+              <div style={{ padding: '32px 0', textAlign: 'center' }}>
+                <svg style={{ height: '32px', width: '32px', color: '#475569', margin: '0 auto 8px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>No gaps identified yet</p>
               </div>
             )}
           </div>
 
           {/* Trending Skills */}
-          <div className="space-y-6">
-            <div className="rounded-lg border border-[#1e1e2e] bg-[#111118] p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-                <h2 className="text-sm font-mono font-semibold text-slate-200 uppercase">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <svg style={{ height: '16px', width: '16px', color: '#22c55e' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase' }}>
                   Market Trend Heatmap
                 </h2>
               </div>
               
               {loading ? (
-                <div className="py-8 text-center text-slate-500 font-mono">
+                <div style={{ padding: '32px 0', textAlign: 'center', fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
                   Loading trends...
                 </div>
               ) : trends && trends.trends.length > 0 ? (
@@ -146,7 +164,7 @@ export default function GapsPage() {
                   topSkills={trends.top_trending}
                 />
               ) : (
-                <div className="py-8 text-center text-slate-500 font-mono">
+                <div style={{ padding: '32px 0', textAlign: 'center', fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
                   No trend data available
                 </div>
               )}
@@ -154,14 +172,17 @@ export default function GapsPage() {
 
             {/* Weekly Recommendation */}
             {snapshot?.assessment?.weekly_recommendation && (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <BookOpen className="h-4 w-4 text-amber-400" />
-                  <h2 className="text-sm font-mono font-semibold text-amber-400 uppercase">
+              <div style={{ borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.3)', backgroundColor: 'rgba(251, 191, 36, 0.05)', padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <svg style={{ height: '16px', width: '16px', color: '#fbbf24' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                  <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#fbbf24', textTransform: 'uppercase' }}>
                     This Week&apos;s Focus
                   </h2>
                 </div>
-                <p className="text-sm text-slate-300 font-mono leading-relaxed">
+                <p style={{ fontSize: '14px', color: '#cbd5e1', fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.6 }}>
                   {snapshot.assessment.weekly_recommendation}
                 </p>
               </div>
@@ -169,15 +190,23 @@ export default function GapsPage() {
 
             {/* Top Trending */}
             {trends?.top_trending && trends.top_trending.length > 0 && (
-              <div className="rounded-lg border border-[#1e1e2e] bg-[#111118] p-4">
-                <h2 className="text-sm font-mono font-semibold text-slate-200 uppercase mb-3">
+              <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px' }}>
+                <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase', marginBottom: '12px' }}>
                   Top Trending Skills
                 </h2>
-                <div className="flex flex-wrap gap-2">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {trends.top_trending.map(skill => (
                     <span 
                       key={skill}
-                      className="px-3 py-1.5 rounded-full text-xs font-mono bg-green-500/10 text-green-400 border border-green-500/20"
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        color: '#22c55e',
+                        border: '1px solid rgba(34, 197, 94, 0.2)'
+                      }}
                     >
                       {skill}
                     </span>

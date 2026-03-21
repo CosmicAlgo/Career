@@ -18,16 +18,20 @@ export default function SkillHeatmap({ data, topSkills }: SkillHeatmapProps) {
   // Get max frequency for normalization
   const maxFreq = Math.max(...data.map(d => d.frequency), 1);
   
-  const getIntensity = (skill: string, date: string) => {
+  const getIntensityColor = (skill: string, date: string) => {
     const freq = dataMap.get(`${skill}-${date}`) || 0;
     const intensity = freq / maxFreq;
     
     // Color scale from dark to amber
-    if (intensity === 0) return 'bg-[#0a0a0f]';
-    if (intensity < 0.25) return 'bg-amber-500/10';
-    if (intensity < 0.5) return 'bg-amber-500/25';
-    if (intensity < 0.75) return 'bg-amber-500/40';
-    return 'bg-amber-500/60';
+    if (intensity === 0) return '#0a0a0f';
+    if (intensity < 0.25) return 'rgba(251, 191, 36, 0.1)';
+    if (intensity < 0.5) return 'rgba(251, 191, 36, 0.25)';
+    if (intensity < 0.75) return 'rgba(251, 191, 36, 0.4)';
+    return 'rgba(251, 191, 36, 0.6)';
+  };
+  
+  const getTextColor = (freq: number) => {
+    return freq / maxFreq > 0.5 ? '#0a0a0f' : '#94a3b8';
   };
   
   const formatDate = (dateStr: string) => {
@@ -43,28 +47,28 @@ export default function SkillHeatmap({ data, topSkills }: SkillHeatmapProps) {
   }).slice(0, 15); // Top 15 skills
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Legend */}
-      <div className="flex items-center gap-3 text-xs font-mono text-slate-500">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
         <span>RARE</span>
-        <div className="flex gap-1">
-          <div className="h-3 w-3 rounded-sm bg-[#0a0a0f] border border-[#1e1e2e]" />
-          <div className="h-3 w-3 rounded-sm bg-amber-500/10" />
-          <div className="h-3 w-3 rounded-sm bg-amber-500/25" />
-          <div className="h-3 w-3 rounded-sm bg-amber-500/40" />
-          <div className="h-3 w-3 rounded-sm bg-amber-500/60" />
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: '#0a0a0f', border: '1px solid #1e1e2e' }} />
+          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.1)' }} />
+          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.25)' }} />
+          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.4)' }} />
+          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.6)' }} />
         </div>
         <span>COMMON</span>
       </div>
       
       {/* Heatmap Grid */}
-      <div className="overflow-x-auto">
-        <div className="min-w-[400px]">
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ minWidth: '400px' }}>
           {/* Header row */}
-          <div className="grid" style={{ gridTemplateColumns: `120px repeat(${dates.length}, 1fr)` }}>
-            <div className="px-2 py-1 text-xs font-mono text-slate-600 uppercase">Skill</div>
+          <div style={{ display: 'grid', gridTemplateColumns: `120px repeat(${dates.length}, 1fr)` }}>
+            <div style={{ padding: '4px 8px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#475569', textTransform: 'uppercase' }}>Skill</div>
             {dates.map(date => (
-              <div key={date} className="px-2 py-1 text-xs font-mono text-slate-500 text-center">
+              <div key={date} style={{ padding: '4px 8px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', textAlign: 'center' }}>
                 {formatDate(date)}
               </div>
             ))}
@@ -74,34 +78,48 @@ export default function SkillHeatmap({ data, topSkills }: SkillHeatmapProps) {
           {sortedSkills.map(skill => (
             <div 
               key={skill}
-              className="grid border-b border-[#1e1e2e] last:border-0"
-              style={{ gridTemplateColumns: `120px repeat(${dates.length}, 1fr)` }}
+              style={{ 
+                display: 'grid', 
+                gridTemplateColumns: `120px repeat(${dates.length}, 1fr)`,
+                borderBottom: '1px solid #1e1e2e'
+              }}
             >
-              <div className={`
-                px-2 py-1.5 text-xs font-mono truncate flex items-center gap-1
-                ${topSkills?.includes(skill) ? 'text-amber-400 font-semibold' : 'text-slate-400'}
-              `}>
-                {topSkills?.includes(skill) && <span className="text-amber-400">★</span>}
+              <div style={{
+                padding: '6px 8px',
+                fontSize: '12px',
+                fontFamily: 'JetBrains Mono, monospace',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: topSkills?.includes(skill) ? '#fbbf24' : '#94a3b8',
+                fontWeight: topSkills?.includes(skill) ? 600 : 400
+              }}>
+                {topSkills?.includes(skill) && <span style={{ color: '#fbbf24' }}>★</span>}
                 {skill}
               </div>
               {dates.map(date => {
                 const freq = dataMap.get(`${skill}-${date}`) || 0;
+                const bgColor = getIntensityColor(skill, date);
+                const textColor = getTextColor(freq);
                 return (
                   <div
                     key={`${skill}-${date}`}
-                    className={`
-                      m-0.5 rounded-sm transition-all
-                      ${getIntensity(skill, date)}
-                      ${freq > 0 ? 'cursor-pointer hover:ring-1 hover:ring-amber-500/50' : ''}
-                    `}
+                    style={{
+                      margin: '2px',
+                      borderRadius: '2px',
+                      transition: 'all 0.2s',
+                      backgroundColor: bgColor,
+                      cursor: freq > 0 ? 'pointer' : 'default',
+                      border: freq > 0 ? '1px solid transparent' : 'none'
+                    }}
                     title={`${skill} on ${date}: ${freq} mentions`}
                   >
                     {freq > 0 && (
-                      <div className="h-full w-full flex items-center justify-center">
-                        <span className={`
-                          text-[10px] font-mono
-                          ${freq / maxFreq > 0.5 ? 'text-slate-900' : 'text-slate-400'}
-                        `}>
+                      <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono, monospace', color: textColor }}>
                           {freq}
                         </span>
                       </div>

@@ -1,7 +1,6 @@
 'use client';
 
 import { NormalisedJob, JobMatch } from '@/lib/types';
-import { ExternalLink, MapPin, DollarSign, Building2 } from 'lucide-react';
 
 interface JobCardProps {
   job: NormalisedJob;
@@ -9,10 +8,14 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, match }: JobCardProps) {
-  const getMatchColor = (pct: number) => {
-    if (pct >= 80) return 'text-green-400 bg-green-400/10 border-green-400/30';
-    if (pct >= 60) return 'text-amber-400 bg-amber-400/10 border-amber-400/30';
-    return 'text-slate-400 bg-slate-400/10 border-slate-400/30';
+  const getMatchColors = (pct: number) => {
+    if (pct >= 80) {
+      return { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.3)' };
+    }
+    if (pct >= 60) {
+      return { color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)', border: 'rgba(251, 191, 36, 0.3)' };
+    }
+    return { color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)', border: 'rgba(148, 163, 184, 0.3)' };
   };
 
   const formatSalary = () => {
@@ -24,51 +27,96 @@ export default function JobCard({ job, match }: JobCardProps) {
     return `${symbol}${min || max}`;
   };
 
+  const matchColors = match ? getMatchColors(match.match_pct) : null;
+
   return (
-    <div className="group relative rounded-lg border border-[#1e1e2e] bg-[#111118] p-4 transition-all hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(251,191,36,0.1)]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
+    <div style={{
+      position: 'relative',
+      borderRadius: '8px',
+      border: '1px solid #1e1e2e',
+      backgroundColor: '#111118',
+      padding: '16px',
+      transition: 'all 0.2s'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           {/* Title & Company */}
-          <div className="flex items-start gap-2">
-            <h3 className="font-mono text-sm font-semibold text-slate-200 truncate">
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <h3 style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#e2e8f0',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
               {job.title}
             </h3>
             {match && (
-              <span className={`flex-shrink-0 px-2 py-0.5 rounded text-xs font-mono border ${getMatchColor(match.match_pct)}`}>
+              <span style={{
+                flexShrink: 0,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontFamily: 'JetBrains Mono, monospace',
+                border: `1px solid ${matchColors?.border}`,
+                backgroundColor: matchColors?.bg,
+                color: matchColors?.color
+              }}>
                 {match.match_pct}%
               </span>
             )}
           </div>
           
-          <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
             {job.company && (
-              <span className="flex items-center gap-1">
-                <Building2 className="h-3 w-3" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <svg style={{ height: '12px', width: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-9a2 2 0 0 1 4 0v9"/>
+                </svg>
                 {job.company}
               </span>
             )}
             {job.location && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <svg style={{ height: '12px', width: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
                 {job.location}
-                {job.remote && <span className="text-green-400">(Remote)</span>}
+                {job.remote && <span style={{ color: '#22c55e' }}>(Remote)</span>}
               </span>
             )}
           </div>
 
           {/* Skills */}
           {job.required_skills.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {job.required_skills.slice(0, 5).map(skill => (
                 <span 
                   key={skill}
-                  className="px-2 py-0.5 rounded text-xs font-mono bg-[#0a0a0f] text-amber-400/80 border border-[#1e1e2e]"
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    backgroundColor: '#0a0a0f',
+                    color: 'rgba(251, 191, 36, 0.8)',
+                    border: '1px solid #1e1e2e'
+                  }}
                 >
                   {skill}
                 </span>
               ))}
               {job.required_skills.length > 5 && (
-                <span className="px-2 py-0.5 rounded text-xs font-mono text-slate-600">
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  color: '#475569'
+                }}>
                   +{job.required_skills.length - 5}
                 </span>
               )}
@@ -77,22 +125,37 @@ export default function JobCard({ job, match }: JobCardProps) {
 
           {/* Match reasons */}
           {match && match.reasons.length > 0 && (
-            <div className="mt-2 text-xs text-slate-500">
-              <span className="text-green-400">Match:</span> {match.reasons.slice(0, 2).join(', ')}
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b' }}>
+              <span style={{ color: '#22c55e' }}>Match:</span> {match.reasons.slice(0, 2).join(', ')}
             </div>
           )}
         </div>
 
         {/* Right side */}
-        <div className="flex flex-col items-end gap-2">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
           {formatSalary() && (
-            <span className="flex items-center gap-1 text-xs font-mono text-green-400">
-              <DollarSign className="h-3 w-3" />
+            <span style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '12px',
+              fontFamily: 'JetBrains Mono, monospace',
+              color: '#22c55e'
+            }}>
+              <svg style={{ height: '12px', width: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" x2="12" y1="2" y2="22"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
               {formatSalary()}
             </span>
           )}
           {job.seniority && (
-            <span className="text-xs font-mono text-slate-500 uppercase">
+            <span style={{
+              fontSize: '12px',
+              fontFamily: 'JetBrains Mono, monospace',
+              color: '#64748b',
+              textTransform: 'uppercase'
+            }}>
               {job.seniority}
             </span>
           )}
@@ -101,17 +164,39 @@ export default function JobCard({ job, match }: JobCardProps) {
               href={job.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded bg-[#0a0a0f] text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+              style={{
+                padding: '6px',
+                borderRadius: '4px',
+                backgroundColor: '#0a0a0f',
+                color: '#94a3b8',
+                textDecoration: 'none',
+                transition: 'all 0.2s'
+              }}
             >
-              <ExternalLink className="h-4 w-4" />
+              <svg style={{ height: '16px', width: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
             </a>
           )}
         </div>
       </div>
 
       {/* Source badge */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="text-[10px] font-mono text-slate-600 uppercase">
+      <div style={{
+        position: 'absolute',
+        top: '8px',
+        right: '8px',
+        opacity: 0,
+        transition: 'opacity 0.2s'
+      }}>
+        <span style={{
+          fontSize: '10px',
+          fontFamily: 'JetBrains Mono, monospace',
+          color: '#475569',
+          textTransform: 'uppercase'
+        }}>
           {job.source}
         </span>
       </div>

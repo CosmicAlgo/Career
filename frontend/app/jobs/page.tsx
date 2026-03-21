@@ -5,7 +5,6 @@ import Navbar from '@/components/Navbar';
 import JobCard from '@/components/JobCard';
 import { getLatestJobs, getLatestSnapshot } from '@/lib/api';
 import { JobsResponse, SnapshotResponse, JobMatch } from '@/lib/types';
-import { Briefcase, Filter, Search } from 'lucide-react';
 
 export default function JobsPage() {
   const [jobsData, setJobsData] = useState<JobsResponse | null>(null);
@@ -60,59 +59,82 @@ export default function JobsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
           <div>
-            <h1 className="text-2xl font-mono font-bold text-slate-200">
-              JOBS <span className="text-amber-400">::</span> MARKET
+            <h1 style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#e2e8f0' }}>
+              JOBS <span style={{ color: '#fbbf24' }}>::</span> MARKET
             </h1>
-            <p className="text-sm font-mono text-slate-500 mt-1">
+            <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', marginTop: '4px' }}>
               {jobsData ? `${jobsData.total} listings` : 'Loading...'} | 
               {jobsData?.date ? ` ${new Date(jobsData.date).toLocaleDateString()}` : ''}
             </p>
           </div>
 
           {/* Filters */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ position: 'relative' }}>
+              <svg style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', height: '16px', width: '16px', color: '#64748b' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
               <input
                 type="text"
                 placeholder="Search jobs..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="pl-9 pr-4 py-2 rounded-lg bg-[#111118] border border-[#1e1e2e] text-sm text-slate-200 placeholder-slate-600 focus:border-amber-500/30 focus:outline-none font-mono"
+                style={{
+                  padding: '8px 16px 8px 40px',
+                  borderRadius: '8px',
+                  border: '1px solid #1e1e2e',
+                  backgroundColor: '#111118',
+                  color: '#e2e8f0',
+                  fontSize: '14px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  outline: 'none'
+                }}
               />
             </div>
             <button
               onClick={() => setRemoteOnly(!remoteOnly)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-mono transition-all ${
-                remoteOnly 
-                  ? 'bg-green-500/10 border-green-500/30 text-green-400' 
-                  : 'bg-[#111118] border-[#1e1e2e] text-slate-500 hover:text-slate-300'
-              }`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: '1px solid',
+                borderColor: remoteOnly ? 'rgba(34, 197, 94, 0.3)' : '#1e1e2e',
+                backgroundColor: remoteOnly ? 'rgba(34, 197, 94, 0.1)' : '#111118',
+                color: remoteOnly ? '#22c55e' : '#64748b',
+                fontSize: '12px',
+                fontFamily: 'JetBrains Mono, monospace',
+                cursor: 'pointer'
+              }}
             >
-              <Filter className="h-3 w-3" />
+              <svg style={{ height: '12px', width: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
               REMOTE
             </button>
           </div>
         </div>
 
         {/* Stats bar */}
-        <div className="flex items-center gap-6 mb-6 text-xs font-mono">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500">MATCHED:</span>
-            <span className="text-amber-400">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#64748b' }}>MATCHED:</span>
+            <span style={{ color: '#fbbf24' }}>
               {jobMatches.size} jobs
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500">FILTERED:</span>
-            <span className="text-slate-300">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#64748b' }}>FILTERED:</span>
+            <span style={{ color: '#94a3b8' }}>
               {sortedJobs.length} shown
             </span>
           </div>
@@ -120,11 +142,11 @@ export default function JobsPage() {
 
         {/* Jobs Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-pulse text-slate-500 font-mono">Loading jobs...</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+            <div style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>Loading jobs...</div>
           </div>
         ) : sortedJobs.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '16px' }}>
             {sortedJobs.map((job) => (
               <JobCard 
                 key={job.id} 
@@ -134,10 +156,13 @@ export default function JobsPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-            <Briefcase className="h-12 w-12 mb-4 opacity-50" />
-            <p className="font-mono">No jobs found</p>
-            <p className="text-sm mt-1">Try adjusting your filters</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', color: '#64748b' }}>
+            <svg style={{ height: '48px', width: '48px', marginBottom: '16px', opacity: 0.5 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+            <p style={{ fontFamily: 'JetBrains Mono, monospace' }}>No jobs found</p>
+            <p style={{ fontSize: '14px', marginTop: '4px' }}>Try adjusting your filters</p>
           </div>
         )}
       </main>

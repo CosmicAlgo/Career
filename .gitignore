@@ -1,2 +1,46 @@
 prompt.md
 .env
+# Environment & Secrets — NEVER commit these
+.env.local
+.env.production
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.pytest_cache/
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+.npm/
+
+# Playwright browsers (huge, auto-downloaded)
+playwright-report/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Quota tracker state file (contains usage data, regenerates automatically)
+backend/scrapers/quota_state.json

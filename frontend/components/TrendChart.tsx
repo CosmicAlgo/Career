@@ -38,18 +38,23 @@ export default function TrendChart({ data, roles }: TrendChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#111118] border border-[#1e1e2e] rounded p-3 shadow-xl">
-          <p className="text-xs font-mono text-slate-400 mb-2">{label}</p>
+        <div style={{
+          backgroundColor: '#111118',
+          border: '1px solid #1e1e2e',
+          borderRadius: '6px',
+          padding: '12px',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+        }}>
+          <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', marginBottom: '8px' }}>{label}</p>
           {payload.map((entry: any) => (
-            <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
+            <div key={entry.dataKey} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
               <span 
-                className="h-2 w-2 rounded-full" 
-                style={{ backgroundColor: entry.color }}
+                style={{ height: '8px', width: '8px', borderRadius: '50%', backgroundColor: entry.color }}
               />
-              <span className="text-slate-300 font-mono capitalize">
+              <span style={{ color: '#cbd5e1', fontFamily: 'JetBrains Mono, monospace', textTransform: 'capitalize' }}>
                 {entry.dataKey.replace(/_/g, ' ')}:
               </span>
-              <span className="font-mono font-bold" style={{ color: entry.color }}>
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: entry.color }}>
                 {entry.value}
               </span>
             </div>
@@ -61,7 +66,7 @@ export default function TrendChart({ data, roles }: TrendChartProps) {
   };
 
   return (
-    <div className="h-[300px] w-full">
+    <div style={{ height: '300px', width: '100%' }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
           <CartesianGrid 

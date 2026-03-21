@@ -5,7 +5,7 @@ Pydantic v2 models for FastAPI request/response schemas
 
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Dict, Optional, Any
-from datetime import date, datetime
+from datetime import date as DateType, datetime
 
 from ingestion.github_schema import GitHubSummary
 
@@ -38,7 +38,7 @@ class NormalisedJob(BaseModel):
     currency: str = Field(default="GBP", description="Currency code")
     source: Optional[str] = Field(default=None, description="Source platform")
     url: Optional[str] = Field(default=None, description="Job posting URL")
-    posted_date: Optional[date] = Field(default=None, description="Posting date")
+    posted_date: Optional[DateType] = Field(default=None, description="Posting date")
 
 
 # ============ Assessment Models ============
@@ -107,7 +107,7 @@ class ScoreResponse(BaseModel):
     
     overall_score: int = Field(..., description="Current overall score")
     role_scores: Dict[str, int] = Field(..., description="Per-role scores")
-    date: date = Field(..., description="Date of assessment")
+    date: DateType = Field(..., description="Date of assessment")
 
 
 class JobsResponse(BaseModel):
@@ -116,7 +116,7 @@ class JobsResponse(BaseModel):
     
     jobs: List[NormalisedJob] = Field(..., description="List of jobs")
     total: int = Field(..., description="Total job count")
-    date: date = Field(..., description="Date of job listings")
+    date: DateType = Field(..., description="Date of job listings")
 
 
 class SnapshotResponse(BaseModel):
@@ -124,7 +124,7 @@ class SnapshotResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     
     id: str = Field(..., description="Snapshot ID")
-    date: date = Field(..., description="Snapshot date")
+    date: DateType = Field(..., description="Snapshot date")
     github_data: GitHubSummary = Field(..., description="GitHub data snapshot")
     assessment: AssessmentResult = Field(..., description="Assessment results")
     overall_score: int = Field(..., description="Overall score")
@@ -135,7 +135,7 @@ class TrendData(BaseModel):
     """Trend data point."""
     model_config = ConfigDict(populate_by_name=True)
     
-    date: date = Field(..., description="Date of data point")
+    date: DateType = Field(..., description="Date of data point")
     overall_score: int = Field(..., description="Overall score")
     role_scores: Dict[str, int] = Field(..., description="Per-role scores")
 
@@ -153,7 +153,7 @@ class SkillTrendData(BaseModel):
     
     skill: str = Field(..., description="Skill name")
     frequency: int = Field(..., description="Frequency in job postings")
-    date: date = Field(..., description="Date of trend data")
+    date: DateType = Field(..., description="Date of trend data")
 
 
 class SkillTrendsResponse(BaseModel):
@@ -169,7 +169,7 @@ class GapResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     
     gaps: List[SkillGap] = Field(..., description="Identified skill gaps")
-    date: date = Field(..., description="Date of gap analysis")
+    date: DateType = Field(..., description="Date of gap analysis")
 
 
 class HealthResponse(BaseModel):
@@ -188,4 +188,4 @@ class AssessmentPayload(BaseModel):
     github_summary: GitHubSummary = Field(..., description="GitHub profile summary")
     target_roles: List[str] = Field(..., description="Target roles for matching")
     job_listings: List[NormalisedJob] = Field(..., description="Job listings to match against")
-    date: date = Field(default_factory=date.today, description="Assessment date")
+    date: DateType = Field(default_factory=DateType.today, description="Assessment date")

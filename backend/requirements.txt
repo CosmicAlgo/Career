@@ -1,42 +1,35 @@
 # CareerRadar Backend Dependencies
-# Python 3.11+
+# Versions unpinned — pip resolves compatible versions automatically
 
 # FastAPI & Server
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
+fastapi
+uvicorn[standard]
 
 # Pydantic & Settings
-pydantic==2.5.3
-pydantic-settings==2.1.0
+pydantic
+pydantic-settings
 
-# Async HTTP Client
-aiohttp==3.9.3
+# Async HTTP
+aiohttp
+httpx
 
 # Supabase Database
-supabase==2.3.1
-postgrest-py==0.16.0
+supabase
 
 # AI Providers
-google-generativeai==0.3.2
-anthropic==0.18.1
+google-generativeai
+anthropic
 
 # Scheduling
-apscheduler==3.10.4
+apscheduler
 
 # Data Processing
-python-dateutil==2.8.2
-beautifulsoup4==4.12.3
-lxml==5.1.0
+python-dateutil
+beautifulsoup4
+lxml
 
 # Web Scraping
-playwright==1.41.0
+playwright
 
 # Utilities
-python-dotenv==1.0.0
-httpx==0.26.0
-
-# Development (optional)
-pytest==8.0.0
-pytest-asyncio==0.23.4
-black==24.1.1
-mypy==1.8.0
+python-dotenv
