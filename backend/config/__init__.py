@@ -1,0 +1,1 @@
+"""CareerRadar backend configuration."""

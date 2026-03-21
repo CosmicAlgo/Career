@@ -1,0 +1,1 @@
+"""CareerRadar backend database module."""
