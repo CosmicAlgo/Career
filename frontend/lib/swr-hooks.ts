@@ -14,6 +14,13 @@ import {
   PipelineStatus,
   RefreshResponse,
   SettingsResponse,
+  JobApplication,
+  CreateApplicationRequest,
+  UpdateApplicationRequest,
+  ApplicationResponse,
+  ApplicationsResponse,
+  ApplicationStatsResponse,
+  FollowUpResponse,
 } from './types';
 import {
   getCurrentScore,
@@ -26,6 +33,12 @@ import {
   triggerRefresh,
   getSettings,
   updateSettings,
+  createApplication,
+  getApplications,
+  updateApplication,
+  getApplicationsByStatus,
+  getApplicationStats,
+  getFollowUps,
 } from './api';
 
 // Fetcher wrapper for SWR
@@ -37,6 +50,11 @@ const SWR_CONFIG = {
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
   dedupingInterval: 2000,
+  errorRetryCount: 3,
+  shouldRetryOnError: true,
+  onError: (err: Error, key: string) => {
+    console.error(`[SWR] Key "${key}" failed:`, err.message);
+  },
 };
 
 // Dashboard data hook
@@ -205,18 +223,111 @@ export function useSettings() {
   };
 }
 
+// Application Tracker hooks
+export function useApplications() {
+  const { data: applicationsData, error, isLoading } = useSWR<ApplicationsResponse>(
+    'applications',
+    () => fetcher(getApplications),
+    SWR_CONFIG
+  );
+
+  return {
+    applications: applicationsData?.applications || [],
+    total: applicationsData?.total || 0,
+    isLoading,
+    error,
+    mutate: () => mutate('applications'),
+  };
+}
+
+export function useApplicationsByStatus(status: string) {
+  const { data: applicationsData, error, isLoading } = useSWR<ApplicationsResponse>(
+    ['applications-by-status', status],
+    () => fetcher(() => getApplicationsByStatus(status)),
+    SWR_CONFIG
+  );
+
+  return {
+    applications: applicationsData?.applications || [],
+    total: applicationsData?.total || 0,
+    isLoading,
+    error,
+    mutate: () => mutate(['applications-by-status', status]),
+  };
+}
+
+export function useApplicationStats(days: number = 30) {
+  const { data: statsData, error, isLoading } = useSWR<ApplicationStatsResponse>(
+    ['application-stats', days],
+    () => fetcher(() => getApplicationStats(days)),
+    SWR_CONFIG
+  );
+
+  return {
+    stats: statsData?.stats,
+    daysAnalyzed: statsData?.days_analyzed || days,
+    isLoading,
+    error,
+    mutate: () => mutate(['application-stats', days]),
+  };
+}
+
+export function useFollowUps(daysAhead: number = 0) {
+  const { data: followUpsData, error, isLoading } = useSWR<FollowUpResponse>(
+    ['follow-ups', daysAhead],
+    () => fetcher(() => getFollowUps(daysAhead)),
+    {
+      ...SWR_CONFIG,
+      refreshInterval: 60000, // Check follow-ups every minute
+    }
+  );
+
+  return {
+    followUps: followUpsData?.follow_ups || [],
+    total: followUpsData?.total || 0,
+    message: followUpsData?.message || '',
+    isLoading,
+    error,
+    mutate: () => mutate(['follow-ups', daysAhead]),
+  };
+}
+
+// Mutation hooks for applications
+export function useApplicationMutations() {
+  const create = async (application: CreateApplicationRequest) => {
+    const result = await createApplication(application);
+    mutate('applications'); // Refresh applications list
+    return result;
+  };
+
+  const update = async (applicationId: string, update: UpdateApplicationRequest) => {
+    const result = await updateApplication(applicationId, update);
+    mutate('applications'); // Refresh applications list
+    mutate(['applications-by-status', update.status]); // Refresh filtered list if status changed
+    return result;
+  };
+
+  return {
+    create,
+    update,
+  };
+}
+
 // Trigger sync with automatic revalidation
 export async function triggerSync(force?: boolean) {
   const result = await triggerRefresh(force);
   
-  // Revalidate all data after sync
+  // Revalidate all known SWR cache keys after sync completes
+  // Fire-and-forget: don't await so the function returns immediately
   mutate('score');
   mutate('snapshot');
   mutate('skill-trends');
   mutate('gaps');
-  mutate(['score-trends', 30]);
-  mutate(['jobs', 100]);
   mutate('pipeline-status');
+  mutate('settings');
+  mutate(['jobs', 100]);
+  mutate(['score-trends', 30]);
+  mutate('applications'); // Also refresh applications
   
   return result;
 }

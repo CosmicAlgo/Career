@@ -31,6 +31,12 @@ lxml
 # Web Scraping
 playwright
 
+# Form/File uploads
+python-multipart
+
+# CV Processing
+PyPDF2
+
 # Utilities
 python-dotenv
 

@@ -158,13 +158,23 @@ class DatabaseQueries:
             print(f"Error fetching latest jobs: {e}")
             return []
     
-    async def delete_old_jobs(self, before_date: date) -> bool:
-        """Delete jobs older than specified date."""
+    async def delete_old_jobs(self, before_date: Optional[date] = None, keep_latest_n: int = 0) -> bool:
+        """Delete jobs older than specified date, or clear all if keep_latest_n=0."""
         try:
-            response = self.client.table("jobs") \
-                .delete() \
-                .lt("posted_date", before_date.isoformat()) \
-                .execute()
+            if keep_latest_n == 0:
+                # Delete all jobs (clear the table)
+                response = self.client.table("jobs") \
+                    .delete() \
+                    .neq("id", "") \
+                    .execute()
+            elif before_date:
+                # Delete jobs before specific date
+                response = self.client.table("jobs") \
+                    .delete() \
+                    .lt("posted_date", before_date.isoformat()) \
+                    .execute()
+            else:
+                return True
             
             return True
         except Exception as e:
@@ -308,7 +318,7 @@ class DatabaseQueries:
             }
             
             response = self.client.table("pipeline_runs") \
-                .upsert(data, on_conflict="date") \
+                .insert(data) \
                 .execute()
             
             if response.data and len(response.data) > 0:

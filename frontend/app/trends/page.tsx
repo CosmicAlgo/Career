@@ -11,7 +11,18 @@ export default function TrendsPage() {
   const [days, setDays] = useState(30);
   const { trends, score, isLoading, error, mutate } = useTrends(days);
 
-  if (isLoading) {
+  if (error && !trends) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
+        <Navbar />
+        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
+          <ErrorState message="No trend data yet. Run the pipeline first." onRetry={() => mutate()} />
+        </main>
+      </div>
+    );
+  }
+
+  if (isLoading && !trends) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
         <Navbar />

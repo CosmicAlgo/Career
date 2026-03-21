@@ -8,6 +8,8 @@ import time
 import logging
 import asyncio
 import re
+import traceback
+import sys
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import date, datetime
 
@@ -115,20 +117,62 @@ class DailyPipelineRunner:
             scraper_metrics: List[ScraperMetrics] = []
             local_scores: Dict[str, int] = {}
             
-            # Step 0: Load user settings from DB (fall back to env vars)
+            # Step 0: Load user settings directly from Supabase (fallback to env vars)
             step_start = time.time()
-            sm = get_settings_manager()
-            self._db_settings = await sm.get_settings()
+            settings_source = "database"
+            
+            try:
+                # Direct Supabase query to fetch user_settings
+                response = self.db.client.table("user_settings") \
+                    .select("*") \
+                    .order("updated_at", desc=True) \
+                    .limit(1) \
+                    .execute()
+                
+                if response.data and len(response.data) > 0:
+                    data = response.data[0]
+                    from api.settings import UserSettings
+                    self._db_settings = UserSettings(
+                        github_username=data.get("github_username", settings.github_username),
+                        target_roles=data.get("target_roles", settings.target_roles),
+                        target_locations=data.get("target_locations", ["UK", "Remote"]),
+                        target_seniority=data.get("target_seniority", ["mid", "senior"]),
+                        updated_at=data.get("updated_at")
+                    )
+                else:
+                    # No settings in database, use env vars
+                    from api.settings import UserSettings
+                    self._db_settings = UserSettings(
+                        github_username=settings.github_username,
+                        target_roles=settings.target_roles,
+                        target_locations=["UK", "Remote"],
+                        target_seniority=["mid", "senior"]
+                    )
+                    settings_source = "env vars"
+                    
+            except Exception as e:
+                print(f"[Pipeline] Failed to load settings from database: {e}", flush=True, file=sys.stderr)
+                # Fallback to env vars on error
+                from api.settings import UserSettings
+                self._db_settings = UserSettings(
+                    github_username=settings.github_username,
+                    target_roles=settings.target_roles,
+                    target_locations=["UK", "Remote"],
+                    target_seniority=["mid", "senior"]
+                )
+                settings_source = "env vars"
+            
             step_times["settings"] = int((time.time() - step_start) * 1000)
-            logger.info(f"[Pipeline] Settings loaded — github_username={self._db_settings.github_username}, "
-                  f"roles={self._db_settings.target_roles}, locations={self._db_settings.target_locations}")
+            print(f"[Pipeline] Settings loaded from: {settings_source}", flush=True)
+            print(f"[Pipeline] Settings loaded — github_username={self._db_settings.github_username}, "
+                  f"roles={self._db_settings.target_roles}, locations={self._db_settings.target_locations}", flush=True)
             
             # Step 1: GitHub Ingestion
             github_summary = None
             if not skip_github:
                 step_start = time.time()
                 gh_user = self._db_settings.github_username or settings.github_username
-                logger.info(f"[Pipeline] Step 1: Fetching GitHub data for {gh_user}...")
+                print(f"[Pipeline] Step 1: Fetching GitHub data for {gh_user}...", flush=True)
                 self.github_client = GitHubClient(username=gh_user)
                 github_summary = await self.github_client.build_summary()
                 step_times["github"] = int((time.time() - step_start) * 1000)
@@ -139,7 +183,7 @@ class DailyPipelineRunner:
                     "languages": list(github_summary.languages.keys()),
                     "duration_ms": step_times["github"]
                 }
-                logger.info(f"[Pipeline] GitHub: {github_summary.total_repos} repos, {len(github_summary.languages)} languages in {step_times['github']}ms")
+                print(f"[Pipeline] GitHub: {github_summary.total_repos} repos, {len(github_summary.languages)} languages in {step_times['github']}ms", flush=True)
             else:
                 # Try to load from existing snapshot
                 existing = await self.db.get_latest_snapshot()
@@ -167,7 +211,7 @@ class DailyPipelineRunner:
                     "duration_ms": scrape_duration,
                     "scraper_details": [{"name": m.scraper_name, "jobs": m.jobs_returned, "error": m.error} for m in scraper_metrics]
                 }
-                logger.info(f"[Pipeline] Jobs: Scraped {len(job_listings)} listings in {scrape_duration}ms")
+                print(f"[Pipeline] Jobs: Scraped {len(job_listings)} listings in {scrape_duration}ms", flush=True)
             else:
                 # Load recent jobs from database
                 jobs_data = await self.db.get_latest_jobs(limit=50)
@@ -178,13 +222,13 @@ class DailyPipelineRunner:
                     "loaded_from_db": True,
                     "count": len(job_listings)
                 }
-                logger.info(f"[Pipeline] Jobs: Loaded {len(job_listings)} from database")
+                print(f"[Pipeline] Jobs: Loaded {len(job_listings)} from database", flush=True)
             
             # Step 2.5: Local ML Scoring
             target_roles = self._db_settings.target_roles if self._db_settings else settings.target_roles
             if github_summary and job_listings:
                 step_start = time.time()
-                logger.info("[Pipeline] Step 2.5: Computing local ML scores...")
+                print("[Pipeline] Step 2.5: Computing local ML scores...", flush=True)
                 
                 from assessment.similarity_scorer import compute_local_ml_scores
                 
@@ -199,7 +243,7 @@ class DailyPipelineRunner:
                     "scores": local_scores,
                     "duration_ms": step_times["ml_scores"]
                 }
-                logger.info(f"[Pipeline] Local ML scores: {local_scores} in {step_times['ml_scores']}ms")
+                print(f"[Pipeline] Local ML scores: {local_scores} in {step_times['ml_scores']}ms", flush=True)
             else:
                 results["steps"]["ml_scores"] = {"success": False, "skipped": True, "reason": "Missing data"}
             
@@ -208,7 +252,7 @@ class DailyPipelineRunner:
             assessment_source = "none"
             if not skip_assessment and github_summary and job_listings:
                 step_start = time.time()
-                logger.info("[Pipeline] Step 3: Running AI assessment...")
+                print("[Pipeline] Step 3: Running AI assessment...", flush=True)
                 
                 try:
                     from assessment.gemini_client import assess_with_gemini
@@ -230,14 +274,14 @@ class DailyPipelineRunner:
                         "source": "gemini",
                         "duration_ms": int((time.time() - step_start) * 1000)
                     }
-                    logger.info(f"[Pipeline] Assessment: Gemini score {assessment.overall_score}")
+                    print(f"[Pipeline] Assessment: Gemini score {assessment.overall_score}", flush=True)
                     
                 except Exception as e:
-                    logger.error(f"[Pipeline] Gemini assessment failed: {e}")
+                    print(f"[Pipeline] Gemini assessment failed: {e}", flush=True, file=sys.stderr)
                     sentry_sdk.capture_exception(e)
                     
                     # Fall back to local ML scores
-                    logger.info("[Pipeline] Falling back to local ML scores")
+                    print("[Pipeline] Falling back to local ML scores", flush=True)
                     assessment = self._create_ml_fallback_assessment(local_scores, job_listings)
                     assessment_source = "local_ml"
                     results["steps"]["assessment"] = {
@@ -249,10 +293,10 @@ class DailyPipelineRunner:
                         "fallback_reason": str(e),
                         "duration_ms": int((time.time() - step_start) * 1000)
                     }
-                    logger.info(f"[Pipeline] Assessment: Local ML score {assessment.overall_score}")
+                    print(f"[Pipeline] Assessment: Local ML score {assessment.overall_score}", flush=True)
                     
             elif not job_listings:
-                logger.warning("[Pipeline] Assessment: Skipped - no market data available")
+                print("[Pipeline] Assessment: Skipped - no market data available", flush=True)
                 results["steps"]["assessment"] = {
                     "success": False,
                     "skipped": True,
@@ -265,11 +309,16 @@ class DailyPipelineRunner:
                     "mock": True,
                     "overall_score": assessment.overall_score
                 }
-                logger.info(f"[Pipeline] Assessment: Created mock assessment (score: {assessment.overall_score})")
+                print(f"[Pipeline] Assessment: Created mock assessment (score: {assessment.overall_score})", flush=True)
             
             # Step 4: Persist to Database
             step_start = time.time()
-            logger.info("[Pipeline] Step 4: Persisting to database...")
+            print("[Pipeline] Step 4: Persisting to database...", flush=True)
+            
+            # Clear old jobs before saving new ones (Bug 3 fix)
+            if job_listings and not skip_jobs:
+                print("[Pipeline] Clearing old jobs before inserting new batch...", flush=True)
+                await self.db.delete_old_jobs(keep_latest_n=0)  # Delete all old jobs
             
             # Save jobs
             if job_listings and not skip_jobs:
@@ -329,12 +378,13 @@ class DailyPipelineRunner:
             results["total_duration_ms"] = total_duration
             results["assessment_source"] = assessment_source
             
-            logger.info(f"[Pipeline] Complete! Snapshot ID: {snapshot_id}, Total duration: {total_duration}ms")
+            print(f"[Pipeline] Complete! Snapshot ID: {snapshot_id}, Total duration: {total_duration}ms", flush=True)
             
         except Exception as e:
             results["success"] = False
             results["message"] = f"Pipeline failed: {str(e)}"
-            logger.error(f"[Pipeline] Error: {e}", exc_info=True)
+            print(f"[Pipeline] Error: {e}", flush=True, file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             sentry_sdk.capture_exception(e)
             
             # Save failed pipeline run
@@ -366,7 +416,7 @@ class DailyPipelineRunner:
         start_time = time.time()
         readable_roles = _roles_to_readable(target_roles)
         
-        logger.info(f"[Pipeline] Starting parallel scraping with roles: {readable_roles}")
+        print(f"[Pipeline] Starting parallel scraping with roles: {readable_roles}", flush=True)
         
         # Import scrapers
         from scrapers.tier1_jsearch import JSearchScraper
@@ -386,21 +436,24 @@ class DailyPipelineRunner:
         
         # Filter available scrapers
         available_scrapers = [(name, s) for name, s in scrapers if s.is_available()]
-        logger.info(f"[Pipeline] {len(available_scrapers)} scrapers available: {[n for n, _ in available_scrapers]}")
+        print(f"[Pipeline] {len(available_scrapers)} scrapers available: {[n for n, _ in available_scrapers]}", flush=True)
         
         # Run all scrapers in parallel with error handling
         async def run_scraper(name: str, scraper):
             try:
-                logger.info(f"[Pipeline] Starting scraper: {name}")
-                jobs, metrics = await scraper.scrape(
-                    target_roles=readable_roles,
-                    target_locations=target_locations,
-                    max_queries=5 if name == "jsearch" else 30
-                )
-                logger.info(f"[Pipeline] Scraper {name} completed: {metrics.jobs_returned} jobs in {metrics.duration_ms}ms")
+                print(f"[Pipeline] Starting scraper: {name}", flush=True)
+                kwargs = {
+                    "target_roles": readable_roles,
+                    "target_locations": target_locations,
+                }
+                if name == "jsearch":
+                    kwargs["max_queries"] = 5
+                jobs, metrics = await scraper.scrape(**kwargs)
+                print(f"[Pipeline] Scraper {name} completed: {metrics.jobs_returned} jobs in {metrics.duration_ms}ms", flush=True)
                 return (name, jobs, metrics)
             except Exception as e:
-                logger.error(f"[Pipeline] Scraper {name} failed: {e}", exc_info=True)
+                print(f"[Pipeline] Scraper {name} failed: {e}", flush=True, file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
                 sentry_sdk.capture_exception(e)
                 metrics = ScraperMetrics(
                     scraper_name=name,
@@ -434,7 +487,7 @@ class DailyPipelineRunner:
         
         duration_ms = int((time.time() - start_time) * 1000)
         
-        logger.info(f"[Pipeline] Parallel scraping complete: {len(unique_jobs)} unique jobs from {len(available_scrapers)} sources in {duration_ms}ms")
+        print(f"[Pipeline] Parallel scraping complete: {len(unique_jobs)} unique jobs from {len(available_scrapers)} sources in {duration_ms}ms", flush=True)
         
         return unique_jobs, all_metrics, duration_ms
     
@@ -783,11 +836,17 @@ async def run_daily_pipeline(
     skip_jobs: bool = False,
     skip_assessment: bool = False
 ) -> Dict[str, Any]:
-    """Convenience function to run the daily pipeline."""
-    runner = DailyPipelineRunner()
-    return await runner.run_full_pipeline(
-        force=force,
-        skip_github=skip_github,
-        skip_jobs=skip_jobs,
-        skip_assessment=skip_assessment
-    )
+    """Convenience function to run the daily pipeline with full error handling."""
+    print('[Pipeline] ===== PIPELINE STARTED =====', flush=True)
+    try:
+        runner = DailyPipelineRunner()
+        return await runner.run_full_pipeline(
+            force=force,
+            skip_github=skip_github,
+            skip_jobs=skip_jobs,
+            skip_assessment=skip_assessment
+        )
+    except Exception as e:
+        print(f'[Pipeline] FATAL ERROR: {e}', flush=True, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        raise

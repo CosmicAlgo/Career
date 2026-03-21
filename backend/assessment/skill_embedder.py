@@ -79,7 +79,7 @@ def extract_skills_from_text(text: str) -> List[str]:
 
 def extract_skills_from_job(job: NormalisedJob) -> List[str]:
     """Extract skills from job description and title."""
-    text = f"{job.title} {job.description or ''}"
+    text = f"{job.title} {' '.join(job.required_skills)} {' '.join(job.nice_to_have)}"
     return extract_skills_from_text(text)
 
 
@@ -144,10 +144,10 @@ def embed_job(job: NormalisedJob) -> np.ndarray:
     text_parts = [job.title]
     if skills:
         text_parts.append("Skills: " + ", ".join(skills))
-    if job.description:
-        # Truncate description
-        desc = job.description[:500]
-        text_parts.append(desc)
+    if job.required_skills:
+        text_parts.append("Required: " + ", ".join(job.required_skills))
+    if job.nice_to_have:
+        text_parts.append("Nice: " + ", ".join(job.nice_to_have))
     
     text = " | ".join(text_parts)
     return embed_text(text)
@@ -195,8 +195,10 @@ def batch_embed_jobs(jobs: List[NormalisedJob]) -> Dict[str, np.ndarray]:
         text_parts = [job.title]
         if skills:
             text_parts.append("Skills: " + ", ".join(skills))
-        if job.description:
-            text_parts.append(job.description[:500])
+        if job.required_skills:
+            text_parts.append(' '.join(job.required_skills))
+        if job.nice_to_have:
+            text_parts.append(' '.join(job.nice_to_have))
         texts.append(" | ".join(text_parts))
     
     model = get_model()

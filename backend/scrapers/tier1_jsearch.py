@@ -183,7 +183,7 @@ class JSearchScraper(BaseScraper):
                     source="jsearch",
                     url=apply_link,
                     posted_date=datetime.now().date(),
-                    description=job.get("job_description", "")[:1000]
+                    description=(job.get("job_description") or "")[:1000]
                 )
                 jobs.append(normalised_job)
             

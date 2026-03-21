@@ -52,9 +52,9 @@ class SettingsManager:
         )
     
     async def update_settings(self, settings: UserSettings) -> UserSettings:
-        """Update user settings in Supabase."""
+        """Update user settings in Supabase using UPSERT to prevent duplicates."""
         try:
-            # Check if any record exists
+            # Get existing record ID if any
             existing = self.client.table("user_settings").select("id").limit(1).execute()
             
             data = {
@@ -66,12 +66,14 @@ class SettingsManager:
             }
             
             if existing.data and len(existing.data) > 0:
-                # Update existing record
+                # Add id for upsert conflict resolution
                 record_id = existing.data[0]["id"]
-                response = self.client.table("user_settings").update(data).eq("id", record_id).execute()
-            else:
-                # Insert new record
-                response = self.client.table("user_settings").insert(data).execute()
+                data["id"] = record_id
+            
+            # Use UPSERT with on_conflict to prevent duplicate rows
+            response = self.client.table("user_settings") \
+                .upsert(data, on_conflict="id") \
+                .execute()
             
             if response.data and len(response.data) > 0:
                 result = response.data[0]

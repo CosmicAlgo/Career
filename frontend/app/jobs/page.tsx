@@ -8,7 +8,18 @@ import { JobCardSkeleton, ErrorState } from '@/components/Skeleton';
 export default function JobsPage() {
   const { jobs, isLoading, error, mutate } = useJobs(100);
 
-  if (isLoading) {
+  if (error && !jobs) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
+        <Navbar />
+        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
+          <ErrorState message="Failed to load jobs. Run the pipeline first." onRetry={() => mutate()} />
+        </main>
+      </div>
+    );
+  }
+
+  if (isLoading && !jobs) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
         <Navbar />

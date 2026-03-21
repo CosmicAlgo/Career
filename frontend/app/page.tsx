@@ -10,7 +10,33 @@ import { ScoreCardSkeleton, HeatmapSkeleton, GapListSkeleton, ErrorState } from 
 export default function Dashboard() {
   const { score, snapshot, skillTrends, gaps, isLoading, error, mutate } = useDashboard();
 
-  if (isLoading) {
+  if (error && !score && !snapshot) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
+        <Navbar />
+        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
+              DASHBOARD <span style={{ color: '#fbbf24' }}>::</span> OVERVIEW
+            </h1>
+          </div>
+          <div style={{ padding: '24px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.3)', backgroundColor: 'rgba(251, 191, 36, 0.05)' }}>
+            <p style={{ fontSize: '16px', color: '#fbbf24', fontFamily: 'JetBrains Mono, monospace', margin: '0 0 8px 0' }}>
+              No pipeline data yet
+            </p>
+            <p style={{ fontSize: '14px', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', margin: '0 0 16px 0' }}>
+              Click the SYNC button in the navbar to run the pipeline and generate your first score.
+            </p>
+            <button onClick={() => mutate()} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #1e1e2e', backgroundColor: '#111118', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', fontSize: '14px', cursor: 'pointer' }}>
+              Retry
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (isLoading && !score && !snapshot) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
         <Navbar />
@@ -28,17 +54,6 @@ export default function Dashboard() {
           </div>
         </main>
         <style jsx global>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
-        <Navbar />
-        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
-          <ErrorState message="Failed to load dashboard data" onRetry={() => mutate()} />
-        </main>
       </div>
     );
   }
