@@ -151,3 +151,74 @@ export interface SettingsResponse {
   target_seniority: string[];
   updated_at?: string;
 }
+
+// Application Tracker Types
+export interface JobApplication {
+  id?: string;
+  user_id?: string;
+  job_title: string;
+  company: string;
+  source_url?: string;
+  source: string;
+  status: 'interested' | 'applied' | 'phone_screen' | 'technical' | 'final' | 'offer' | 'rejected';
+  date_applied?: string;
+  notes?: string;
+  salary_range?: string;
+  location?: string;
+  follow_up_date?: string;
+  response_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateApplicationRequest {
+  job_title: string;
+  company: string;
+  source_url?: string;
+  source?: string;
+  status?: string;
+  notes?: string;
+  salary_range?: string;
+  location?: string;
+}
+
+export interface UpdateApplicationRequest {
+  status?: string;
+  notes?: string;
+  response_date?: string;
+}
+
+export interface ApplicationResponse {
+  application: JobApplication;
+  success: boolean;
+  message: string;
+}
+
+export interface ApplicationsResponse {
+  applications: JobApplication[];
+  total: number;
+  success: boolean;
+}
+
+export interface ApplicationStats {
+  total_applications: number;
+  by_status: Record<string, number>;
+  by_source: Record<string, number>;
+  response_rate: number;
+  interview_rate: number;
+  offer_rate: number;
+  avg_response_days: number;
+}
+
+export interface ApplicationStatsResponse {
+  stats: ApplicationStats;
+  success: boolean;
+  days_analyzed: number;
+}
+
+export interface FollowUpResponse {
+  follow_ups: JobApplication[];
+  total: number;
+  success: boolean;
+  message: string;
+}

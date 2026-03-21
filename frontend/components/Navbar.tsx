@@ -22,9 +22,9 @@ export default function Navbar() {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
-      await triggerSync();
-      await mutateStatus();
-      setToast({ message: 'Sync complete', type: 'success' });
+      await triggerSync(true);
+      setToast({ message: 'Pipeline started — data will update in ~60s', type: 'success' });
+      mutateStatus();
     } catch (err) {
       setToast({ message: 'Sync failed', type: 'error' });
     } finally {
@@ -36,6 +36,8 @@ export default function Navbar() {
     { href: '/', label: 'DASHBOARD' },
     { href: '/trends', label: 'TRENDS' },
     { href: '/jobs', label: 'JOBS' },
+    { href: '/applications', label: 'APPLICATIONS' },
+    { href: '/cv', label: 'CV' },
     { href: '/gaps', label: 'GAPS' },
     { href: '/settings', label: 'SETTINGS' },
   ];

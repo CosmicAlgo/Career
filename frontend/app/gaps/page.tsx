@@ -9,7 +9,18 @@ import { GapListSkeleton, HeatmapSkeleton, ErrorState } from '@/components/Skele
 export default function GapsPage() {
   const { gaps, trends, snapshot, isLoading, error, mutate } = useGaps();
 
-  if (isLoading) {
+  if (error && !gaps) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
+        <Navbar />
+        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
+          <ErrorState message="No gap data yet. Run the pipeline first." onRetry={() => mutate()} />
+        </main>
+      </div>
+    );
+  }
+
+  if (isLoading && !gaps) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
         <Navbar />

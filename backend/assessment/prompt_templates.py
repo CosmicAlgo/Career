@@ -234,12 +234,23 @@ def parse_assessment_response(response_data: Dict[str, Any]) -> AssessmentResult
             reasons=job_data.get("reasons", [])
         ))
     
+    # Parse strengths - Gemini sometimes returns dicts instead of strings
+    raw_strengths = response_data.get("strengths", [])
+    strengths = []
+    for s in raw_strengths:
+        if isinstance(s, str):
+            strengths.append(s)
+        elif isinstance(s, dict):
+            strengths.append(s.get("strength", s.get("description", str(s))))
+        else:
+            strengths.append(str(s))
+    
     return AssessmentResult(
         overall_score=response_data.get("overall_score", 0),
         role_scores=response_data.get("role_scores", {}),
         top_matching_jobs=top_jobs,
         skill_gaps=skill_gaps,
-        strengths=response_data.get("strengths", []),
+        strengths=strengths,
         weekly_recommendation=response_data.get("weekly_recommendation", ""),
         trending_skills_today=response_data.get("trending_skills_today", [])
     )

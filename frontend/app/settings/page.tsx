@@ -285,7 +285,7 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button
               type="submit"
-              disabled={isSaving || isLoading}
+              disabled={isSaving}
               style={{
                 padding: '12px 24px',
                 borderRadius: '6px',
@@ -295,7 +295,7 @@ export default function SettingsPage() {
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: '14px',
                 fontWeight: 600,
-                cursor: isSaving || isLoading ? 'not-allowed' : 'pointer',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
                 opacity: isSaving || isLoading ? 0.6 : 1,
                 transition: 'all 0.2s',
                 textTransform: 'uppercase',

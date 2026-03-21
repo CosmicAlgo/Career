@@ -17,7 +17,7 @@ httpx
 supabase
 
 # AI Providers
-google-generativeai
+google-genai
 anthropic
 
 # Scheduling
@@ -31,8 +31,22 @@ lxml
 # Web Scraping
 playwright
 
+# Form/File uploads
+python-multipart
+
+# CV Processing
+PyPDF2
+
 # Utilities
 python-dotenv
 
 # Error Tracking
 sentry-sdk[fastapi]
+
+# ML & Vector Operations (CareerRadar Upgrade)
+sentence-transformers
+numpy
+scikit-learn
+
+# System Monitoring
+psutil

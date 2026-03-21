@@ -14,25 +14,50 @@ import {
   PipelineStatus,
   HealthResponse,
   SettingsResponse,
+  JobApplication,
+  CreateApplicationRequest,
+  UpdateApplicationRequest,
+  ApplicationResponse,
+  ApplicationsResponse,
+  ApplicationStatsResponse,
+  FollowUpResponse,
 } from './types';
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || '';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...options,
-  });
+  
+  // Add 8-second timeout to prevent hanging forever
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      ...options,
+    });
+    clearTimeout(timeoutId);
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`API Error ${response.status}: ${error}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[API] ${endpoint} → ${response.status}:`, errorText);
+      throw new Error(`API Error ${response.status}: ${errorText}`);
+    }
+
+    return response.json();
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      console.error(`[API] ${endpoint} → TIMEOUT (8s)`);
+      throw new Error(`Request timeout: ${endpoint}`);
+    }
+    console.error(`[API] ${endpoint} → FAILED:`, err.message);
+    throw err;
   }
-
-  return response.json();
 }
 
 // Health check
@@ -91,8 +116,7 @@ export async function getSkillTrends(days?: number): Promise<SkillTrendsResponse
 
 // Refresh / Pipeline
 export async function triggerRefresh(force?: boolean): Promise<RefreshResponse> {
-  const params = force ? '?force=true' : '';
-  return fetchApi<RefreshResponse>(`/api/score/refresh${params}`, {
+  return fetchApi<RefreshResponse>('/api/score/refresh', {
     method: 'POST',
     body: JSON.stringify({ force: force || false }),
   });
@@ -112,4 +136,37 @@ export async function updateSettings(settings: Partial<SettingsResponse>): Promi
     method: 'POST',
     body: JSON.stringify(settings),
   });
+}
+
+// Application Tracker
+export async function createApplication(application: CreateApplicationRequest): Promise<ApplicationResponse> {
+  return fetchApi<ApplicationResponse>('/api/applications', {
+    method: 'POST',
+    body: JSON.stringify(application),
+  });
+}
+
+export async function getApplications(): Promise<ApplicationsResponse> {
+  return fetchApi<ApplicationsResponse>('/api/applications');
+}
+
+export async function updateApplication(applicationId: string, update: UpdateApplicationRequest): Promise<ApplicationResponse> {
+  return fetchApi<ApplicationResponse>(`/api/applications/${applicationId}`, {
+    method: 'PUT',
+    body: JSON.stringify(update),
+  });
+}
+
+export async function getApplicationsByStatus(status: string): Promise<ApplicationsResponse> {
+  return fetchApi<ApplicationsResponse>(`/api/applications/status/${status}`);
+}
+
+export async function getApplicationStats(days?: number): Promise<ApplicationStatsResponse> {
+  const params = days ? `?days=${days}` : '';
+  return fetchApi<ApplicationStatsResponse>(`/api/applications/stats${params}`);
+}
+
+export async function getFollowUps(daysAhead?: number): Promise<FollowUpResponse> {
+  const params = daysAhead ? `?days_ahead=${daysAhead}` : '';
+  return fetchApi<FollowUpResponse>(`/api/applications/follow-ups${params}`);
 }

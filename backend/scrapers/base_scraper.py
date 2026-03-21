@@ -22,6 +22,15 @@ class ScraperTier(Enum):
 
 
 @dataclass
+class ScraperMetrics:
+    """Metrics for scraper execution."""
+    scraper_name: str
+    duration_ms: int
+    jobs_returned: int
+    error: Optional[str] = None
+
+
+@dataclass
 class RawJobListing:
     """Raw job listing data from any source."""
     title: str

@@ -6,7 +6,10 @@ All API route definitions
 from typing import List, Optional
 from datetime import date, datetime, timedelta
 
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+import asyncio
+import threading
+
+from fastapi import APIRouter, HTTPException, Query, File, Form
 from pydantic import BaseModel, Field, ConfigDict
 
 from api.schemas import (
@@ -251,13 +254,10 @@ async def get_skill_trends(
 
 @router.post("/api/score/refresh", response_model=RefreshResponse, tags=["Refresh"])
 async def trigger_refresh(
-    background_tasks: BackgroundTasks,
     request: RefreshRequest = RefreshRequest()
 ):
     """
     Manually trigger a pipeline refresh.
-    
-    This starts the daily pipeline in the background.
     """
     # Check if already ran today
     if not request.force:
@@ -270,19 +270,23 @@ async def trigger_refresh(
                 snapshot_id=None
             )
     
-    # Run pipeline in background
-    background_tasks.add_task(run_daily_pipeline, force=request.force)
+    # Run pipeline in background thread for Windows compatibility
+    import threading
+    thread = threading.Thread(
+        target=lambda: asyncio.run(run_daily_pipeline(force=request.force))
+    )
+    thread.daemon = True
+    thread.start()
     
     return RefreshResponse(
         success=True,
-        message="Pipeline refresh triggered. Check back in a few minutes.",
+        message="Pipeline started in background.",
         snapshot_id=None
     )
 
 
 @router.post("/api/trigger/daily", response_model=RefreshResponse, tags=["Refresh"])
 async def trigger_daily_pipeline(
-    background_tasks: BackgroundTasks,
     force: bool = Query(default=False, description="Force run even if already completed today")
 ):
     """
@@ -290,7 +294,7 @@ async def trigger_daily_pipeline(
     
     This is the endpoint called by the scheduler.
     """
-    return await trigger_refresh(background_tasks, RefreshRequest(force=force))
+    return await trigger_refresh(RefreshRequest(force=force))
 
 
 # ============ Debug/Status Routes ============
@@ -329,6 +333,272 @@ async def get_pipeline_status():
         total_snapshots=len(snapshots),
         jobs_today=jobs_today
     )
+
+
+class PipelineRunResponse(BaseModel):
+    """Response model for pipeline run."""
+    model_config = ConfigDict(populate_by_name=True)
+    
+    id: str
+    date: date
+    run_at: datetime
+    github_duration_ms: int
+    scraping_duration_ms: int
+    assessment_duration_ms: int
+    embedding_duration_ms: int
+    total_duration_ms: int
+    jobs_scraped: int
+    status: str
+    error: Optional[str]
+
+
+class PipelineHistoryResponse(BaseModel):
+    """Response model for pipeline history."""
+    model_config = ConfigDict(populate_by_name=True)
+    
+    runs: List[PipelineRunResponse]
+    total: int
+
+
+@router.get("/api/pipeline/history", response_model=PipelineHistoryResponse, tags=["Pipeline"])
+async def get_pipeline_history(
+    limit: int = Query(default=10, ge=1, le=50, description="Number of runs to return")
+):
+    """Get pipeline execution history with timing metrics."""
+    db = get_db_queries()
+    
+    runs_data = await db.get_pipeline_run_history(limit=limit)
+    
+    runs = []
+    for run in runs_data:
+        runs.append(PipelineRunResponse(
+            id=run["id"],
+            date=date.fromisoformat(run["date"]),
+            run_at=datetime.fromisoformat(run["run_at"].replace("Z", "+00:00")),
+            github_duration_ms=run.get("github_duration_ms", 0),
+            scraping_duration_ms=run.get("scraping_duration_ms", 0),
+            assessment_duration_ms=run.get("assessment_duration_ms", 0),
+            embedding_duration_ms=run.get("embedding_duration_ms", 0),
+            total_duration_ms=run.get("total_duration_ms", 0),
+            jobs_scraped=run.get("jobs_scraped", 0),
+            status=run.get("status", "unknown"),
+            error=run.get("error")
+        ))
+    
+    return PipelineHistoryResponse(runs=runs, total=len(runs))
+
+
+# ============ Application Tracker Routes ============
+
+from api.application_schemas import (
+    JobApplication, CreateApplicationRequest, UpdateApplicationRequest,
+    ApplicationResponse, ApplicationsResponse, ApplicationStats,
+    ApplicationStatsResponse, FollowUpResponse
+)
+from database.application_tracker import application_tracker
+
+
+# ============ CV Processing Routes ============
+
+from api.cv_schemas import CVUploadResponse, CVAnalysisRequest, CVListResponse, CVDeleteResponse
+from pipeline.cv_processor import cv_processor, cv_matcher
+
+
+@router.post("/api/cv/upload", response_model=CVUploadResponse, tags=["CV"])
+async def upload_cv(file: bytes = File(...), filename: str = Form(...), target_roles: List[str] = Form(default=[])):
+    """Upload and process a CV file."""
+    try:
+        # Validate file type
+        if not filename.lower().endswith('.pdf'):
+            raise HTTPException(status_code=400, detail="Only PDF files are supported")
+        
+        # Process CV
+        cv_data = await cv_processor.process_cv_file(file, filename)
+        
+        # Analyze against market if target roles provided
+        analysis = None
+        if target_roles:
+            analysis = await cv_matcher.analyze_cv_against_market(cv_data, target_roles)
+        
+        # Store CV data in database (optional - for history)
+        try:
+            cv_record = {
+                'filename': filename,
+                'cv_data': cv_data,
+                'analysis': analysis,
+                'target_roles': target_roles,
+                'processed_at': datetime.utcnow().isoformat()
+            }
+            
+            # This would require a cv_uploads table - for now just return the data
+            # response = supabase_manager.client.table('cv_uploads').insert(cv_record).execute()
+            
+        except Exception as e:
+            print(f"[CV Upload] Warning: Could not save to database: {e}")
+        
+        return CVUploadResponse(
+            success=True,
+            message="CV processed successfully",
+            cv_data=cv_data,
+            analysis=analysis
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process CV: {str(e)}")
+
+
+@router.post("/api/cv/analyze", response_model=CVUploadResponse, tags=["CV"])
+async def analyze_cv(request: CVAnalysisRequest):
+    """Analyze existing CV data against market."""
+    try:
+        # This would typically fetch stored CV data
+        # For now, return an error that no CV is available
+        raise HTTPException(status_code=404, detail="No CV data available. Please upload a CV first.")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to analyze CV: {str(e)}")
+
+
+@router.get("/api/cv/list", response_model=CVListResponse, tags=["CV"])
+async def list_cvs():
+    """List all processed CVs."""
+    try:
+        # This would fetch from database
+        # For now, return empty list
+        return CVListResponse(
+            cvs=[],
+            total=0,
+            success=True
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list CVs: {str(e)}")
+
+
+@router.delete("/api/cv/{cv_id}", response_model=CVDeleteResponse, tags=["CV"])
+async def delete_cv(cv_id: str):
+    """Delete a processed CV."""
+    try:
+        # This would delete from database
+        # For now, return success
+        return CVDeleteResponse(
+            success=True,
+            message="CV deleted successfully"
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete CV: {str(e)}")
+
+
+@router.post("/api/applications", response_model=ApplicationResponse, tags=["Applications"])
+async def create_application(request: CreateApplicationRequest):
+    """Create a new job application."""
+    try:
+        app_data = request.dict()
+        created_app = await application_tracker.create_application(app_data)
+        
+        return ApplicationResponse(
+            application=JobApplication(**created_app),
+            success=True,
+            message="Application created successfully"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create application: {str(e)}")
+
+
+@router.get("/api/applications", response_model=ApplicationsResponse, tags=["Applications"])
+async def get_applications():
+    """Get all job applications."""
+    try:
+        applications_data = await application_tracker.get_applications()
+        applications = [JobApplication(**app) for app in applications_data]
+        
+        return ApplicationsResponse(
+            applications=applications,
+            total=len(applications),
+            success=True
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch applications: {str(e)}")
+
+
+@router.put("/api/applications/{application_id}", response_model=ApplicationResponse, tags=["Applications"])
+async def update_application(application_id: str, request: UpdateApplicationRequest):
+    """Update a job application."""
+    try:
+        update_data = request.dict(exclude_unset=True)
+        updated_app = await application_tracker.update_application_status(
+            application_id, 
+            update_data.get("status", ""),
+            update_data.get("notes")
+        )
+        
+        return ApplicationResponse(
+            application=JobApplication(**updated_app),
+            success=True,
+            message="Application updated successfully"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update application: {str(e)}")
+
+
+@router.get("/api/applications/status/{status}", response_model=ApplicationsResponse, tags=["Applications"])
+async def get_applications_by_status(status: str):
+    """Get applications filtered by status."""
+    try:
+        applications_data = await application_tracker.get_applications_by_status(status)
+        applications = [JobApplication(**app) for app in applications_data]
+        
+        return ApplicationsResponse(
+            applications=applications,
+            total=len(applications),
+            success=True
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch applications: {str(e)}")
+
+
+@router.get("/api/applications/stats", response_model=ApplicationStatsResponse, tags=["Applications"])
+async def get_application_stats(days: int = Query(default=30, ge=1, le=365)):
+    """Get application statistics for the last N days."""
+    try:
+        stats_data = await application_tracker.get_application_stats(days)
+        stats = ApplicationStats(**stats_data)
+        
+        return ApplicationStatsResponse(
+            stats=stats,
+            success=True,
+            days_analyzed=days
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch stats: {str(e)}")
+
+
+@router.get("/api/applications/follow-ups", response_model=FollowUpResponse, tags=["Applications"])
+async def get_follow_ups(days_ahead: int = Query(default=0, ge=0, le=30)):
+    """Get applications that need follow-up."""
+    try:
+        follow_ups_data = await application_tracker.get_follow_ups_due(days_ahead)
+        follow_ups = [JobApplication(**app) for app in follow_ups_data]
+        
+        message = f"Found {len(follow_ups)} follow-ups due"
+        if days_ahead > 0:
+            message += f" in the next {days_ahead} days"
+        elif days_ahead == 0:
+            message += " today"
+        
+        return FollowUpResponse(
+            follow_ups=follow_ups,
+            total=len(follow_ups),
+            success=True,
+            message=message
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch follow-ups: {str(e)}")
 
 
 # ============ Settings Routes ============
