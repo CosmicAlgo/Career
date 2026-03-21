@@ -70,25 +70,13 @@ jobs:
     if: github.event_name == 'pull_request'
     
     steps:
-      - name: Post Security Summary
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const summary = `
-            ## 🔒 Security Audit Summary
-            
-            | Check | Status |
-            |-------|--------|
-            | Gitleaks Secrets Scan | ${{ needs.gitleaks.result == 'success' && '✅ Passed' || '❌ Failed' }} |
-            | pip-audit (Python) | ${{ needs.pip-audit.result == 'success' && '✅ Passed' || '⚠️ Check Required' }} |
-            | npm audit (Node.js) | ${{ needs.npm-audit.result == 'success' && '✅ Passed' || '⚠️ Check Required' }} |
-            
-            **Note:** If Gitleaks finds secrets, the PR will be blocked from merging.
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
-            });
+      - name: Security Summary
+        run: |
+          echo "## 🔒 Security Audit Summary"
+          echo "| Check | Status |"
+          echo "|-------|--------|"
+          echo "| Gitleaks Secrets Scan | ${{ needs.gitleaks.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+          echo "| pip-audit (Python) | ${{ needs.pip-audit.result == 'success' && '✅ Passed' || '⚠️ Check Required' }} |"
+          echo "| npm audit (Node.js) | ${{ needs.npm-audit.result == 'success' && '✅ Passed' || '⚠️ Check Required' }} |"
+          echo ""
+          echo "**Note:** If Gitleaks finds secrets, the PR will be blocked from merging."
