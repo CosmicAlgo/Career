@@ -53,12 +53,12 @@ export default function Navbar() {
 
   return (
     <>
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: \1px solid \\, backgroundColor: \\f2\, backdropFilter: 'blur(4px)' }}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${terminalBorder}`, backgroundColor: `${terminalBg}f2`, backdropFilter: 'blur(4px)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
           <div style={{ display: 'flex', height: '56px', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link href= / style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-              <svg style={{ height: '24px', width: '24px', color: amberColor }} viewBox=0 0 24 24 fill=none stroke=currentColor strokeWidth=2>
-                <circle cx=12 cy=12 r=3/><path d=M12 2v4M12 18v4M2 12h4M18 12h4/>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+              <svg style={{ height: '24px', width: '24px', color: amberColor }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
               </svg>
               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '18px', fontWeight: 600, color: amberColor, letterSpacing: '-0.025em' }}>
                 CareerRadar
@@ -82,7 +82,7 @@ export default function Navbar() {
                       fontFamily: 'JetBrains Mono, monospace',
                       textDecoration: 'none',
                       transition: 'all 0.2s',
-                      border: isActive ? \1px solid rgba(251, 191, 36, 0.3)\ : '1px solid transparent',
+                      border: isActive ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid transparent',
                       backgroundColor: isActive ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
                       color: isActive ? amberColor : slate400
                     }}
@@ -109,7 +109,7 @@ export default function Navbar() {
                   gap: '6px',
                   padding: '6px 12px',
                   borderRadius: '6px',
-                  border: \1px solid \\,
+                  border: `1px solid ${terminalBorder}`,
                   backgroundColor: '#111118',
                   color: slate400,
                   fontSize: '12px',
@@ -120,12 +120,12 @@ export default function Navbar() {
                 }}
               >
                 {isRefreshing ? (
-                  <svg style={{ height: '16px', width: '16px', animation: 'spin 1s linear infinite' }} viewBox=0 0 24 24 fill=none stroke=currentColor strokeWidth=2>
-                    <path d=M12 2v4M12 18v4M2 12h4M18 12h4/>
+                  <svg style={{ height: '16px', width: '16px', animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
                   </svg>
                 ) : (
-                  <svg style={{ height: '16px', width: '16px' }} viewBox=0 0 24 24 fill=none stroke=currentColor strokeWidth=2>
-                    <path d=M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M21 12v9m0-9h-9/>
+                  <svg style={{ height: '16px', width: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M21 12v9m0-9h-9"/>
                   </svg>
                 )}
                 <span>{isRefreshing ? 'SYNCING...' : 'SYNC'}</span>
@@ -133,8 +133,6 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-
-        <style jsx global>{\@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\}</style>
       </nav>
 
       {toast && (
@@ -148,15 +146,24 @@ export default function Navbar() {
           fontSize: '14px',
           fontFamily: 'JetBrains Mono, monospace',
           backgroundColor: toast.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-          border: \1px solid \\,
+          border: `1px solid ${toast.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
           color: toast.type === 'success' ? '#22c55e' : '#ef4444',
           animation: 'slideIn 0.3s ease-out'
         }}>
-          {toast.type === 'success' ? '? ' : '? '}{toast.message}
+          {toast.type === 'success' ? '✓ ' : '✗ '}{toast.message}
         </div>
       )}
 
-      <style jsx global>{\@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }\}</style>
+      <style jsx global>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
     </>
   );
 }
