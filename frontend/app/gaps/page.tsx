@@ -80,7 +80,7 @@ export default function GapsPage() {
                 Learning Recommendations
               </h2>
               <p style={{ fontSize: '14px', color: '#cbd5e1', fontFamily: 'JetBrains Mono, monospace', margin: 0 }}>
-                Focus on closing high-priority gaps first. Skills with frequency >50% in job postings are critical for marketability.
+                Focus on closing high-priority gaps first. Skills with frequency {'>'} 50% in job postings are critical for marketability.
               </p>
             </div>
           )}

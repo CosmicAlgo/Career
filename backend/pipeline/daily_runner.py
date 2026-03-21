@@ -4,6 +4,7 @@ Orchestrates the daily data pipeline: GitHub ingestion, job scraping, AI assessm
 """
 
 import asyncio
+import re
 from typing import List, Dict, Optional, Any
 from datetime import date, datetime
 
@@ -16,6 +17,35 @@ from api.schemas import (
     AssessmentPayload
 )
 from database.queries import get_db_queries, DatabaseQueries
+from api.settings import get_settings_manager
+
+
+# Map slug-style role names to human-readable search terms
+ROLE_SLUG_MAP = {
+    "ml_engineer": "ML Engineer",
+    "mlops": "MLOps Engineer",
+    "devops": "DevOps Engineer",
+    "backend": "Backend Engineer",
+    "data_engineer": "Data Engineer",
+    "data_scientist": "Data Scientist",
+    "sre": "Site Reliability Engineer",
+    "platform": "Platform Engineer",
+}
+
+
+def _roles_to_query(roles: List[str], locations: List[str]) -> str:
+    """Convert role slugs/names + locations into a JSearch query string."""
+    readable = []
+    for r in roles:
+        mapped = ROLE_SLUG_MAP.get(r.lower().strip())
+        if mapped:
+            readable.append(mapped)
+        else:
+            readable.append(r.replace("_", " ").title())
+    
+    loc_str = locations[0] if locations else "UK"
+    parts = [f"{role} {loc_str}" for role in readable]
+    return " OR ".join(parts)
 
 
 class DailyPipelineRunner:
@@ -24,6 +54,8 @@ class DailyPipelineRunner:
     def __init__(self, db_queries: Optional[DatabaseQueries] = None):
         self.db = db_queries or get_db_queries()
         self.github_client = GitHubClient()
+        # Will be populated from DB at pipeline start
+        self._db_settings = None
     
     async def run_full_pipeline(
         self,
@@ -66,11 +98,19 @@ class DailyPipelineRunner:
         }
         
         try:
+            # Step 0: Load user settings from DB (fall back to env vars)
+            sm = get_settings_manager()
+            self._db_settings = await sm.get_settings()
+            print(f"[Pipeline] Settings loaded — github_username={self._db_settings.github_username}, "
+                  f"roles={self._db_settings.target_roles}, locations={self._db_settings.target_locations}")
+            
             # Step 1: GitHub Ingestion
             github_summary = None
             if not skip_github:
-                print(f"[Pipeline] Step 1: Fetching GitHub data for {settings.github_username}...")
-                github_summary = await get_github_summary()
+                gh_user = self._db_settings.github_username or settings.github_username
+                print(f"[Pipeline] Step 1: Fetching GitHub data for {gh_user}...")
+                self.github_client = GitHubClient(username=gh_user)
+                github_summary = await self.github_client.build_summary()
                 results["steps"]["github"] = {
                     "success": True,
                     "username": github_summary.username,
@@ -114,9 +154,10 @@ class DailyPipelineRunner:
             
             # Step 3: AI Assessment
             assessment = None
+            target_roles = self._db_settings.target_roles if self._db_settings else settings.target_roles
             if not skip_assessment and github_summary and job_listings:
                 print("[Pipeline] Step 3: Running AI assessment...")
-                assessment = await self._run_assessment(github_summary, job_listings)
+                assessment = await self._run_assessment(github_summary, job_listings, target_roles)
                 results["steps"]["assessment"] = {
                     "success": True,
                     "overall_score": assessment.overall_score,
@@ -190,40 +231,42 @@ class DailyPipelineRunner:
     async def _scrape_jobs(self) -> List[NormalisedJob]:
         """
         Scrape job listings using JSearch RapidAPI.
-        Returns real jobs only - no mock data fallback.
+        Reads roles/locations from DB settings. Returns real jobs only.
         """
         jobs: List[NormalisedJob] = []
         
         if not settings.rapidapi_key:
-            print("[Pipeline] Job scraping: RAPIDAPI_KEY not configured, skipping job scraping")
+            print("[Pipeline] Job scraping: RAPIDAPI_KEY not configured, skipping")
             print("[Pipeline] Add RAPIDAPI_KEY to your .env to enable real job listings")
             return jobs
         
-        print("[Pipeline] Job scraping: Using JSearch RapidAPI...")
+        # Build query from DB settings (falls back to env vars)
+        roles = self._db_settings.target_roles if self._db_settings else settings.target_roles
+        locations = self._db_settings.target_locations if self._db_settings else ["UK"]
+        query = _roles_to_query(roles, locations)
+        
+        print(f"[Pipeline] Job scraping: Using JSearch RapidAPI...")
+        print(f"[Pipeline] Query: {query}")
+        
         try:
             from scrapers.tier1_jsearch import scrape_with_jsearch
             from api.schemas import NormalisedJob as NJ
             
-            # Call JSearch scraper with combined query
             raw_jobs = await scrape_with_jsearch(
-                query="ML Engineer OR MLOps Engineer OR DevOps Engineer",
-                location="UK",
+                query=query,
+                location=locations[0] if locations else "UK",
                 max_results=50
             )
             
             print(f"[Pipeline] JSearch returned {len(raw_jobs)} raw jobs")
             
-            # Convert RawJobListing to NormalisedJob
             for raw in raw_jobs:
                 try:
-                    # Extract skills from description using simple keyword matching
                     skills = self._extract_skills_from_description(raw.description or "")
-                    
-                    # Parse salary from salary_text if available
                     salary_min, salary_max = self._parse_salary(raw.salary_text)
                     
                     job = NJ(
-                        id=f"jsearch-{hash(raw.url) % 10000000:07d}",
+                        id=f"jsearch-{abs(hash(raw.url or raw.title)) % 10000000:07d}",
                         title=raw.title,
                         company=raw.company or "Unknown",
                         location=raw.location or "UK",
@@ -240,13 +283,15 @@ class DailyPipelineRunner:
                     )
                     jobs.append(job)
                 except Exception as e:
-                    print(f"[Pipeline] Failed to convert job: {e}")
+                    print(f"[Pipeline] Failed to convert job '{raw.title}': {e}")
                     continue
             
-            print(f"[Pipeline] JSearch: Successfully scraped {len(jobs)} jobs")
+            print(f"[Pipeline] JSearch: Successfully converted {len(jobs)} jobs")
             
         except Exception as e:
-            print(f"[Pipeline] JSearch failed: {e}")
+            print(f"[Pipeline] JSearch failed: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
         
         return jobs
     
@@ -254,9 +299,6 @@ class DailyPipelineRunner:
         """Parse min/max salary from salary text."""
         if not salary_text:
             return None, None
-        
-        # Simple parsing - look for numbers in the text
-        import re
         numbers = re.findall(r'\d+', salary_text.replace(",", ""))
         if len(numbers) >= 2:
             return int(numbers[0]), int(numbers[1])
@@ -498,25 +540,29 @@ class DailyPipelineRunner:
     async def _run_assessment(
         self,
         github_summary: GitHubSummary,
-        job_listings: List[NormalisedJob]
+        job_listings: List[NormalisedJob],
+        target_roles: Optional[List[str]] = None
     ) -> AssessmentResult:
         """
         Run AI assessment using Gemini or Claude.
         
         Returns AssessmentResult with scores, gaps, and recommendations.
         """
-        # Import assessment modules here to avoid circular imports
         from assessment.ai_router import get_ai_client
         
-        payload = AssessmentPayload(
-            github_summary=github_summary,
-            target_roles=settings.target_roles,
-            job_listings=job_listings,
-            date=date.today()
-        )
+        roles = target_roles or (self._db_settings.target_roles if self._db_settings else settings.target_roles)
+        
+        # AI clients expect (github_summary: dict, target_roles: list, job_listings: list, assessment_date: str)
+        gh_dict = github_summary.model_dump() if hasattr(github_summary, 'model_dump') else dict(github_summary)
+        jobs_list = [j.model_dump() if hasattr(j, 'model_dump') else dict(j) for j in job_listings]
         
         ai_client = get_ai_client()
-        return await ai_client.assess_profile(payload)
+        return await ai_client.assess_profile(
+            github_summary=gh_dict,
+            target_roles=roles,
+            job_listings=jobs_list,
+            assessment_date=date.today().isoformat()
+        )
     
     def _create_mock_assessment(
         self,

@@ -92,8 +92,8 @@ export default function TrendsPage() {
           <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase', margin: '0 0 24px 0' }}>
             Score History
           </h2>
-          {trends?.scores && trends.scores.length > 0 ? (
-            <TrendChart data={trends.scores} />
+          {trends?.trends && trends.trends.length > 0 ? (
+            <TrendChart data={trends.trends} roles={Object.keys(trends.trends[0]?.role_scores || {})} />
           ) : (
             <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
               No trend data available for the selected period
