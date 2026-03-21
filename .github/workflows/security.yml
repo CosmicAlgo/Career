@@ -79,9 +79,9 @@ jobs:
             
             | Check | Status |
             |-------|--------|
-            | Gitleaks Secrets Scan | ${needs.gitleaks.result === 'success' ? '✅ Passed' : '❌ Failed'} |
-            | pip-audit (Python) | ${needs.pip-audit.result === 'success' ? '✅ Passed' : '⚠️ Check Required'} |
-            | npm audit (Node.js) | ${needs.npm-audit.result === 'success' ? '✅ Passed' : '⚠️ Check Required'} |
+            | Gitleaks Secrets Scan | ${{ needs.gitleaks.result == 'success' && '✅ Passed' || '❌ Failed' }} |
+            | pip-audit (Python) | ${{ needs.pip-audit.result == 'success' && '✅ Passed' || '⚠️ Check Required' }} |
+            | npm audit (Node.js) | ${{ needs.npm-audit.result == 'success' && '✅ Passed' || '⚠️ Check Required' }} |
             
             **Note:** If Gitleaks finds secrets, the PR will be blocked from merging.
             `;
