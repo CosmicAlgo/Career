@@ -1,13 +1,14 @@
 """
 CareerRadar - Gemini Flash 2.5 Client
-Google AI client for profile assessment using Gemini's structured output
+Google AI client for profile assessment using new google-genai SDK
 """
 
 import json
+import logging
 from typing import Dict, Any, Optional
 
-import google.generativeai as genai
-from google.generativeai.types import GenerationConfig
+from google import genai
+from google.genai import types
 
 from config.settings import settings
 from assessment.assessment_schema import AssessmentResult
@@ -19,9 +20,11 @@ from assessment.prompt_templates import (
     get_gemini_response_schema
 )
 
+logger = logging.getLogger(__name__)
+
 
 class GeminiClient:
-    """Google Gemini Flash 2.5 AI client with structured JSON output."""
+    """Google Gemini Flash 2.5 AI client with structured JSON output using new SDK."""
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or settings.google_ai_api_key
@@ -29,33 +32,21 @@ class GeminiClient:
         if not self.api_key:
             raise ValueError("Google AI API key not configured")
         
-        # Configure API
-        genai.configure(api_key=self.api_key)
+        # Initialize client with new SDK
+        self.client = genai.Client(api_key=self.api_key)
         
         # Try gemini-2.5-flash, fallback to gemini-1.5-flash
-        model_name = "gemini-2.5-flash"
-        try:
-            # Test if model exists
-            self.model = genai.GenerativeModel(model_name)
-        except Exception:
-            model_name = "gemini-1.5-flash"
-            self.model = genai.GenerativeModel(model_name)
+        self.model_name = "gemini-2.5-flash"
         
-        self.model_name = model_name
-        
-        # Generation config for structured output
-        self.generation_config = GenerationConfig(
-            temperature=0.3,
-            response_mime_type="application/json",
-            max_output_tokens=8192
-        )
+        logger.info(f"[Gemini] Initialized with model: {self.model_name}")
     
     async def assess_profile(
         self,
         github_summary: Dict[str, Any],
         target_roles: list,
         job_listings: list,
-        assessment_date: str
+        assessment_date: str,
+        local_scores: Optional[Dict[str, int]] = None
     ) -> AssessmentResult:
         """
         Run profile assessment using Gemini Flash 2.5.
@@ -67,67 +58,78 @@ class GeminiClient:
             target_roles: Target role names
             job_listings: Job listings to match against
             assessment_date: Date string (ISO format)
+            local_scores: Optional local ML scores to provide as context
             
         Returns:
             AssessmentResult with scores, gaps, and recommendations
+            
+        Raises:
+            Exception: If assessment fails and cannot produce valid result
         """
-        # Build prompts
+        # Build prompts with local scores context if available
+        local_scores_text = ""
+        if local_scores:
+            local_scores_text = f"""
+Local ML similarity scores (0-100) computed from skill embeddings:
+- Overall: {local_scores.get('overall', 'N/A')}
+- ML Engineer: {local_scores.get('ml_engineer', 'N/A')}
+- MLOps: {local_scores.get('mlops', 'N/A')}
+- DevOps: {local_scores.get('devops', 'N/A')}
+- Backend: {local_scores.get('backend', 'N/A')}
+
+Use these as a baseline for your assessment but apply your own judgment based on the full profile context.
+"""
+        
         user_prompt = build_user_prompt(
             github_summary=github_summary,
             target_roles=target_roles,
             job_listings=job_listings,
             assessment_date=assessment_date
-        )
+        ) + local_scores_text
         
         try:
-            # Create generation config with response schema for structured output
-            # Gemini 1.5 Flash+ supports response_schema parameter
-            if self.model_name == "gemini-1.5-flash":
-                try:
-                    response_schema = get_gemini_response_schema()
-                    generation_config = GenerationConfig(
-                        temperature=0.3,
-                        response_mime_type="application/json",
-                        response_schema=response_schema,
-                        max_output_tokens=8192
-                    )
-                except Exception:
-                    # Fallback if response_schema not supported
-                    generation_config = self.generation_config
-            else:
-                generation_config = self.generation_config
-            
-            # Start chat
-            chat = self.model.start_chat(history=[])
-            
             # Combine system + user prompts
             full_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
             
-            # Send message
-            response = await chat.send_message_async(
-                full_prompt,
-                generation_config=generation_config
+            # Configure generation with JSON output
+            config = types.GenerateContentConfig(
+                temperature=0.3,
+                max_output_tokens=8192,
+                response_mime_type="application/json"
             )
             
-            # Parse JSON response
+            logger.info(f"[Gemini] Sending assessment request with {len(job_listings)} jobs")
+            
+            # Generate content with new SDK
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=full_prompt,
+                config=config
+            )
+            
+            # Get response text
             response_text = response.text
             
-            # Clean up response if needed (in case model didn't use structured output)
+            # Clean up response if needed
             response_text = self._clean_json_response(response_text)
             
             # Parse to dict
             response_data = json.loads(response_text)
             
+            # Add assessment source
+            response_data['assessment_source'] = 'gemini'
+            if local_scores:
+                response_data['local_ml_scores'] = local_scores
+            
             # Validate and construct AssessmentResult
-            return parse_assessment_response(response_data)
+            result = parse_assessment_response(response_data)
+            logger.info(f"[Gemini] Assessment complete: overall_score={result.overall_score}")
+            return result
             
         except Exception as e:
-            print(f"[Gemini] Assessment error: {e}")
-            # Return fallback assessment on error
-            return create_fallback_assessment(
-                github_languages=list(github_summary.get('languages', {}).keys()),
-                job_count=len(job_listings)
-            )
+            logger.error(f"[Gemini] Assessment error: {e}", exc_info=True)
+            # Re-raise exception instead of silently falling back
+            raise Exception(f"Gemini assessment failed: {str(e)}") from e
     
     def _clean_json_response(self, text: str) -> str:
         """Clean up JSON response from model."""
@@ -158,10 +160,11 @@ async def assess_with_gemini(
     github_summary: Dict[str, Any],
     target_roles: list,
     job_listings: list,
-    assessment_date: str
+    assessment_date: str,
+    local_scores: Optional[Dict[str, int]] = None
 ) -> AssessmentResult:
     """Assess profile using Gemini."""
     client = GeminiClient()
     return await client.assess_profile(
-        github_summary, target_roles, job_listings, assessment_date
+        github_summary, target_roles, job_listings, assessment_date, local_scores
     )

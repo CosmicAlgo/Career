@@ -17,6 +17,12 @@ from config.settings import settings
 from api.routes import router
 from database.supabase_client import supabase_manager
 from pipeline.daily_runner import run_daily_pipeline
+from utils.logging_config import configure_logging
+
+# Configure logging
+configure_logging(level=settings.log_level if hasattr(settings, 'log_level') else "INFO")
+import logging
+logger = logging.getLogger(__name__)
 
 
 # Initialize Sentry if DSN is configured

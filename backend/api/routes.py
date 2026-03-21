@@ -331,6 +331,59 @@ async def get_pipeline_status():
     )
 
 
+class PipelineRunResponse(BaseModel):
+    """Response model for pipeline run."""
+    model_config = ConfigDict(populate_by_name=True)
+    
+    id: str
+    date: date
+    run_at: datetime
+    github_duration_ms: int
+    scraping_duration_ms: int
+    assessment_duration_ms: int
+    embedding_duration_ms: int
+    total_duration_ms: int
+    jobs_scraped: int
+    status: str
+    error: Optional[str]
+
+
+class PipelineHistoryResponse(BaseModel):
+    """Response model for pipeline history."""
+    model_config = ConfigDict(populate_by_name=True)
+    
+    runs: List[PipelineRunResponse]
+    total: int
+
+
+@router.get("/api/pipeline/history", response_model=PipelineHistoryResponse, tags=["Pipeline"])
+async def get_pipeline_history(
+    limit: int = Query(default=10, ge=1, le=50, description="Number of runs to return")
+):
+    """Get pipeline execution history with timing metrics."""
+    db = get_db_queries()
+    
+    runs_data = await db.get_pipeline_run_history(limit=limit)
+    
+    runs = []
+    for run in runs_data:
+        runs.append(PipelineRunResponse(
+            id=run["id"],
+            date=date.fromisoformat(run["date"]),
+            run_at=datetime.fromisoformat(run["run_at"].replace("Z", "+00:00")),
+            github_duration_ms=run.get("github_duration_ms", 0),
+            scraping_duration_ms=run.get("scraping_duration_ms", 0),
+            assessment_duration_ms=run.get("assessment_duration_ms", 0),
+            embedding_duration_ms=run.get("embedding_duration_ms", 0),
+            total_duration_ms=run.get("total_duration_ms", 0),
+            jobs_scraped=run.get("jobs_scraped", 0),
+            status=run.get("status", "unknown"),
+            error=run.get("error")
+        ))
+    
+    return PipelineHistoryResponse(runs=runs, total=len(runs))
+
+
 # ============ Settings Routes ============
 
 from api.settings import UserSettings, get_settings_manager

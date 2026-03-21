@@ -17,7 +17,7 @@ httpx
 supabase
 
 # AI Providers
-google-generativeai
+google-genai
 anthropic
 
 # Scheduling
@@ -36,3 +36,11 @@ python-dotenv
 
 # Error Tracking
 sentry-sdk[fastapi]
+
+# ML & Vector Operations (CareerRadar Upgrade)
+sentence-transformers
+numpy
+scikit-learn
+
+# System Monitoring
+psutil

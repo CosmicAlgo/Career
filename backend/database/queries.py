@@ -31,7 +31,7 @@ class DatabaseQueries:
         assessment: AssessmentResult,
         overall_score: int
     ) -> Optional[str]:
-        """Create a new daily snapshot. Returns snapshot ID."""
+        """Create or update a daily snapshot using UPSERT. Returns snapshot ID."""
         try:
             data = {
                 "date": snapshot_date.isoformat(),
@@ -40,13 +40,16 @@ class DatabaseQueries:
                 "overall_score": overall_score
             }
             
-            response = self.client.table("snapshots").insert(data).execute()
+            # Use UPSERT to update existing snapshot for the same date
+            response = self.client.table("snapshots") \
+                .upsert(data, on_conflict="date") \
+                .execute()
             
             if response.data and len(response.data) > 0:
                 return response.data[0]["id"]
             return None
         except Exception as e:
-            print(f"Error creating snapshot: {e}")
+            print(f"Error upserting snapshot: {e}")
             return None
     
     async def get_snapshot_by_date(self, snapshot_date: date) -> Optional[Dict[str, Any]]:
@@ -272,6 +275,64 @@ class DatabaseQueries:
             return response.data or []
         except Exception as e:
             print(f"Error fetching role scores: {e}")
+            return []
+    
+    # ============ Pipeline Runs Operations ============
+    
+    async def create_pipeline_run(
+        self,
+        run_date: date,
+        github_duration_ms: int = 0,
+        scraping_duration_ms: int = 0,
+        assessment_duration_ms: int = 0,
+        embedding_duration_ms: int = 0,
+        total_duration_ms: int = 0,
+        jobs_scraped: int = 0,
+        scraper_metrics: Optional[Dict[str, Any]] = None,
+        status: str = "success",
+        error: Optional[str] = None
+    ) -> Optional[str]:
+        """Create a pipeline run record."""
+        try:
+            data = {
+                "date": run_date.isoformat(),
+                "github_duration_ms": github_duration_ms,
+                "scraping_duration_ms": scraping_duration_ms,
+                "assessment_duration_ms": assessment_duration_ms,
+                "embedding_duration_ms": embedding_duration_ms,
+                "total_duration_ms": total_duration_ms,
+                "jobs_scraped": jobs_scraped,
+                "scraper_metrics": scraper_metrics or {},
+                "status": status,
+                "error": error
+            }
+            
+            response = self.client.table("pipeline_runs") \
+                .upsert(data, on_conflict="date") \
+                .execute()
+            
+            if response.data and len(response.data) > 0:
+                return response.data[0]["id"]
+            return None
+        except Exception as e:
+            print(f"Error creating pipeline run: {e}")
+            return None
+    
+    async def get_pipeline_run_history(
+        self,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """Get recent pipeline runs."""
+        try:
+            response = self.client.table("pipeline_runs") \
+                .select("*") \
+                .order("run_at", desc=True) \
+                .limit(limit) \
+                .execute()
+            
+            return response.data or []
+        except Exception as e:
+            print(f"Error fetching pipeline runs: {e}")
             return []
     
     # ============ Helper Methods ============
