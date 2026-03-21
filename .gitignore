@@ -44,3 +44,4 @@ logs/
 
 # Quota tracker state file (contains usage data, regenerates automatically)
 backend/scrapers/quota_state.json
+PR_DESCRIPTION.md

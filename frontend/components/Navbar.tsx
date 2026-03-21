@@ -199,6 +199,10 @@ export default function Navbar() {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
           }
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
         `}</style>
       </nav>
 
@@ -221,13 +225,6 @@ export default function Navbar() {
           {toast.type === 'success' ? '✓ ' : '✗ '}{toast.message}
         </div>
       )}
-
-      <style jsx global>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-      `}</style>
     </>
   );
 }
