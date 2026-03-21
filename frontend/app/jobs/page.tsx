@@ -15,6 +15,16 @@ export default function JobsPage() {
 
   useEffect(() => {
     loadJobs();
+
+    // Listen for sync completion to refetch data
+    const handleRefetch = () => {
+      loadJobs();
+    };
+    window.addEventListener('data-refetch', handleRefetch);
+    
+    return () => {
+      window.removeEventListener('data-refetch', handleRefetch);
+    };
   }, []);
 
   async function loadJobs() {

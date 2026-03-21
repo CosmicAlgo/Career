@@ -15,6 +15,16 @@ export default function TrendsPage() {
 
   useEffect(() => {
     loadTrends();
+
+    // Listen for sync completion to refetch data
+    const handleRefetch = () => {
+      loadTrends();
+    };
+    window.addEventListener('data-refetch', handleRefetch);
+    
+    return () => {
+      window.removeEventListener('data-refetch', handleRefetch);
+    };
   }, [days]);
 
   async function loadTrends() {

@@ -5,7 +5,7 @@ All database read/write operations
 
 import json
 from typing import List, Optional, Dict, Any
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from supabase import Client
 
@@ -35,8 +35,8 @@ class DatabaseQueries:
         try:
             data = {
                 "date": snapshot_date.isoformat(),
-                "github_data": github_data.model_dump(),
-                "assessment": assessment.model_dump(),
+                "github_data": github_data.model_dump(mode='json'),
+                "assessment": assessment.model_dump(mode='json'),
                 "overall_score": overall_score
             }
             
@@ -83,7 +83,7 @@ class DatabaseQueries:
     async def get_snapshot_history(self, days: int = 30) -> List[Dict[str, Any]]:
         """Get snapshot history for the last N days."""
         try:
-            from_date = datetime.now() - datetime.timedelta(days=days)
+            from_date = datetime.now() - timedelta(days=days)
             
             response = self.client.table("snapshots") \
                 .select("*") \
@@ -211,7 +211,7 @@ class DatabaseQueries:
                     .eq("date", trend_date.isoformat()) \
                     .execute()
             else:
-                from_date = datetime.now() - datetime.timedelta(days=days)
+                from_date = datetime.now() - timedelta(days=days)
                 response = self.client.table("skill_trends") \
                     .select("*") \
                     .gte("date", from_date.date().isoformat()) \
@@ -260,7 +260,7 @@ class DatabaseQueries:
     ) -> List[Dict[str, Any]]:
         """Get role score history."""
         try:
-            from_date = datetime.now() - datetime.timedelta(days=days)
+            from_date = datetime.now() - timedelta(days=days)
             
             response = self.client.table("role_scores") \
                 .select("*") \

@@ -23,6 +23,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadDashboardData();
+
+    // Listen for sync completion to refetch data
+    const handleRefetch = () => {
+      loadDashboardData();
+    };
+    window.addEventListener('data-refetch', handleRefetch);
+    
+    return () => {
+      window.removeEventListener('data-refetch', handleRefetch);
+    };
   }, []);
 
   async function loadDashboardData() {
@@ -84,6 +94,14 @@ export default function Dashboard() {
         {error && (
           <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontFamily: 'JetBrains Mono, monospace', fontSize: '14px' }}>
             {error}
+          </div>
+        )}
+
+        {/* No Market Data Message */}
+        {snapshot && !snapshot.assessment?.overall_score && (
+          <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.3)', backgroundColor: 'rgba(251, 191, 36, 0.05)', color: '#fbbf24', fontFamily: 'JetBrains Mono, monospace', fontSize: '14px' }}>
+            <span style={{ marginRight: '8px' }}>⚠</span>
+            No market data yet — add a RapidAPI key to enable job matching
           </div>
         )}
 

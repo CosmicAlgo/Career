@@ -15,6 +15,16 @@ export default function GapsPage() {
 
   useEffect(() => {
     loadData();
+
+    // Listen for sync completion to refetch data
+    const handleRefetch = () => {
+      loadData();
+    };
+    window.addEventListener('data-refetch', handleRefetch);
+    
+    return () => {
+      window.removeEventListener('data-refetch', handleRefetch);
+    };
   }, []);
 
   async function loadData() {
