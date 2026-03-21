@@ -189,67 +189,80 @@ class DailyPipelineRunner:
     
     async def _scrape_jobs(self) -> List[NormalisedJob]:
         """
-        Scrape job listings using tiered fallback strategy.
-        
-        Tier 1: JSearch RapidAPI
-        Tier 2: Mock jobs (if no API key configured)
+        Scrape job listings using JSearch RapidAPI.
+        Returns real jobs only - no mock data fallback.
         """
         jobs: List[NormalisedJob] = []
         
-        # Try JSearch if API key is available
-        if settings.rapidapi_key:
-            print("[Pipeline] Job scraping: Using JSearch RapidAPI...")
-            try:
-                from scrapers.tier1_jsearch import scrape_with_jsearch
-                from api.schemas import NormalisedJob as NJ
-                
-                # Search for each target role
-                for role in settings.target_roles:
-                    raw_jobs = await scrape_with_jsearch(
-                        query=role.replace("_", " ").title(),
-                        location="UK",
-                        max_results=10
-                    )
-                    
-                    # Convert RawJobListing to NormalisedJob
-                    for raw in raw_jobs:
-                        try:
-                            # Extract skills from description using simple keyword matching
-                            skills = self._extract_skills_from_description(raw.description or "")
-                            
-                            job = NJ(
-                                id=f"jsearch-{raw.source}-{hash(raw.url) % 10000000:07d}",
-                                title=raw.title,
-                                company=raw.company or "Unknown",
-                                location=raw.location or "UK",
-                                description=raw.description or "",
-                                url=raw.url or "",
-                                source="jsearch",
-                                posted_date=raw.posted_at.date() if raw.posted_at else date.today(),
-                                salary_min=None,
-                                salary_max=None,
-                                currency="GBP",
-                                remote=raw.remote,
-                                required_skills=skills,
-                                seniority="mid"
-                            )
-                            jobs.append(job)
-                        except Exception as e:
-                            print(f"[Pipeline] Failed to convert job: {e}")
-                            continue
-                
-                print(f"[Pipeline] JSearch: Found {len(jobs)} jobs")
-                
-            except Exception as e:
-                print(f"[Pipeline] JSearch failed: {e}")
+        if not settings.rapidapi_key:
+            print("[Pipeline] Job scraping: RAPIDAPI_KEY not configured, skipping job scraping")
+            print("[Pipeline] Add RAPIDAPI_KEY to your .env to enable real job listings")
+            return jobs
         
-        # If no jobs from JSearch or no API key, generate mock jobs
-        if not jobs:
-            print("[Pipeline] Job scraping: Generating mock jobs...")
-            jobs = self._generate_mock_jobs()
-            print(f"[Pipeline] Generated {len(jobs)} mock jobs")
+        print("[Pipeline] Job scraping: Using JSearch RapidAPI...")
+        try:
+            from scrapers.tier1_jsearch import scrape_with_jsearch
+            from api.schemas import NormalisedJob as NJ
+            
+            # Call JSearch scraper with combined query
+            raw_jobs = await scrape_with_jsearch(
+                query="ML Engineer OR MLOps Engineer OR DevOps Engineer",
+                location="UK",
+                max_results=50
+            )
+            
+            print(f"[Pipeline] JSearch returned {len(raw_jobs)} raw jobs")
+            
+            # Convert RawJobListing to NormalisedJob
+            for raw in raw_jobs:
+                try:
+                    # Extract skills from description using simple keyword matching
+                    skills = self._extract_skills_from_description(raw.description or "")
+                    
+                    # Parse salary from salary_text if available
+                    salary_min, salary_max = self._parse_salary(raw.salary_text)
+                    
+                    job = NJ(
+                        id=f"jsearch-{hash(raw.url) % 10000000:07d}",
+                        title=raw.title,
+                        company=raw.company or "Unknown",
+                        location=raw.location or "UK",
+                        description=raw.description or "",
+                        url=raw.url or "",
+                        source="jsearch",
+                        posted_date=raw.posted_at.date() if raw.posted_at else date.today(),
+                        salary_min=salary_min,
+                        salary_max=salary_max,
+                        currency="GBP",
+                        remote=raw.remote,
+                        required_skills=skills,
+                        seniority="mid"
+                    )
+                    jobs.append(job)
+                except Exception as e:
+                    print(f"[Pipeline] Failed to convert job: {e}")
+                    continue
+            
+            print(f"[Pipeline] JSearch: Successfully scraped {len(jobs)} jobs")
+            
+        except Exception as e:
+            print(f"[Pipeline] JSearch failed: {e}")
         
         return jobs
+    
+    def _parse_salary(self, salary_text: Optional[str]) -> tuple[Optional[int], Optional[int]]:
+        """Parse min/max salary from salary text."""
+        if not salary_text:
+            return None, None
+        
+        # Simple parsing - look for numbers in the text
+        import re
+        numbers = re.findall(r'\d+', salary_text.replace(",", ""))
+        if len(numbers) >= 2:
+            return int(numbers[0]), int(numbers[1])
+        elif len(numbers) == 1:
+            return int(numbers[0]), None
+        return None, None
     
     def _extract_skills_from_description(self, description: str) -> List[str]:
         """Extract common tech skills from job description."""

@@ -1,51 +1,24 @@
 """
-CareerRadar - Tier 1 Scraper: JSearch RapidAPI
-Primary job source: 200 free requests/month via RapidAPI
+CareerRadar - JSearch RapidAPI Scraper (Tier 1)
+Real job listings from JSearch RapidAPI
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from datetime import datetime
+import httpx
 
-from scrapers.base_scraper import BaseScraper, RawJobListing, ScraperTier, QuotaExceededError
-from scrapers.quota_tracker import get_quota_tracker
+from .base_scraper import BaseScraper, RawJobListing, ScraperTier
 from config.settings import settings
 
 
-JSEARCH_API_URL = "https://jsearch.p.rapidapi.com/search"
-
-
 class JSearchScraper(BaseScraper):
-    """
-    JSearch RapidAPI scraper - Tier 1.
-    
-    Free tier: 200 requests/month
-    Covers: LinkedIn, Indeed, Glassdoor aggregated
-    """
+    """Tier 1 scraper using JSearch RapidAPI."""
     
     def __init__(self):
-        super().__init__(
-            tier=ScraperTier.TIER_1_API,
-            max_retries=3,
-            retry_delay=1.0
-        )
+        super().__init__(tier=ScraperTier.TIER_1_API, max_retries=3, retry_delay=1.0, timeout=30.0)
         self.api_key = settings.rapidapi_key
-        self.quota_name = "jsearch_rapidapi"
-        
-        # Register quota tracking
-        tracker = get_quota_tracker()
-        tracker.register_quota(
-            name=self.quota_name,
-            limit=settings.rapidapi_jsearch_quota,
-            reset_date=datetime.now().replace(day=1)  # Resets monthly
-        )
-    
-    def is_available(self) -> bool:
-        """Check if API key is configured and quota available."""
-        if not self.api_key:
-            return False
-        
-        tracker = get_quota_tracker()
-        return tracker.should_use_tier(self.quota_name, warning_threshold=90.0)
+        self.api_host = "jsearch.p.rapidapi.com"
+        self.base_url = "https://jsearch.p.rapidapi.com/search"
     
     async def scrape(
         self,
@@ -54,141 +27,112 @@ class JSearchScraper(BaseScraper):
         max_results: int = 50
     ) -> List[RawJobListing]:
         """
-        Scrape jobs via JSearch RapidAPI.
+        Scrape job listings from JSearch RapidAPI.
         
         Args:
-            query: Job search query (e.g., "ML Engineer")
-            location: Location (e.g., "UK", "Remote")
-            max_results: Max results to return (API returns up to 10 per page)
+            query: Job search query
+            location: Location filter
+            max_results: Maximum results (capped by API)
+            
+        Returns:
+            List of RawJobListing objects
         """
-        if not self.is_available():
-            raise QuotaExceededError("JSearch quota exhausted or not configured")
-        
-        tracker = get_quota_tracker()
-        jobs: List[RawJobListing] = []
-        
-        # Build query string
-        search_query = query
-        if location and location.lower() != "remote":
-            search_query = f"{query} in {location}"
-        elif location and location.lower() == "remote":
-            search_query = f"{query} remote"
-        
-        # JSearch returns max 10 per request, paginate
-        page = 1
-        remaining = max_results
-        
-        while remaining > 0 and page <= 5:  # Max 5 pages = 50 results
-            page_jobs = await self._fetch_page(search_query, page, min(remaining, 10))
-            
-            if not page_jobs:
-                break
-            
-            jobs.extend(page_jobs)
-            remaining -= len(page_jobs)
-            page += 1
-            
-            # Record API usage
-            tracker.record_usage(self.quota_name, 1)
-        
-        return jobs[:max_results]
-    
-    async def _fetch_page(
-        self,
-        query: str,
-        page: int,
-        num_pages: int = 1
-    ) -> List[RawJobListing]:
-        """Fetch a single page of results."""
-        
-        async def _make_request():
-            headers = {
-                "X-RapidAPI-Key": self.api_key,
-                "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
-            }
-            
-            params = {
-                "query": query,
-                "page": page,
-                "num_pages": num_pages,
-                "date_posted": "all",  # Options: all, today, 3days, week, month
-                "job_requirements": "no_experience",  # Options: under_3_years_experience, more_than_3_years_experience, no_experience, no_degree
-            }
-            
-            response = await self._make_http_request(
-                "GET",
-                JSEARCH_API_URL,
-                headers=headers,
-                params=params
-            )
-            return response.json()
-        
-        try:
-            data = await self._retry_with_backoff(_make_request)
-        except Exception as e:
-            print(f"[JSearch] API request failed: {e}")
+        if not self.api_key:
+            print("[JSearch] Warning: RAPIDAPI_KEY not configured, returning empty list")
             return []
         
-        jobs = []
+        # Build combined query for all target roles
+        target_roles = settings.target_roles or ["ML Engineer", "MLOps Engineer", "DevOps Engineer"]
+        combined_query = " OR ".join([f'"{role} UK"' for role in target_roles])
         
-        if "data" not in data:
-            return jobs
+        print(f"[JSearch] Calling API with query: {combined_query[:60]}...")
         
-        for item in data.get("data", []):
-            try:
-                job = self._parse_job_item(item)
-                if job:
-                    jobs.append(job)
-            except Exception as e:
-                print(f"[JSearch] Failed to parse job item: {e}")
-                continue
+        headers = {
+            "X-RapidAPI-Key": self.api_key,
+            "X-RapidAPI-Host": self.api_host
+        }
         
-        return jobs
+        params = {
+            "query": combined_query,
+            "page": "1",
+            "num_pages": "2",
+            "date_posted": "today"
+        }
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(
+                    self.base_url,
+                    headers=headers,
+                    params=params
+                )
+                response.raise_for_status()
+                data = response.json()
+                
+            jobs_data = data.get("data", [])
+            print(f"[JSearch] API returned {len(jobs_data)} jobs")
+            
+            listings = []
+            for job in jobs_data:
+                # Map JSearch fields to RawJobListing
+                listing = RawJobListing(
+                    title=job.get("job_title", "Unknown Title"),
+                    company=job.get("employer_name"),
+                    location=self._build_location(job),
+                    description=job.get("job_description", ""),
+                    url=job.get("job_apply_link") or job.get("job_apply_url"),
+                    salary_text=self._format_salary(job),
+                    posted_at=self._parse_date(job.get("job_posted_at_datetime_utc")),
+                    source="jsearch",
+                    remote=job.get("job_is_remote", False),
+                    raw_data=job
+                )
+                listings.append(listing)
+            
+            print(f"[JSearch] Successfully parsed {len(listings)} job listings")
+            return listings
+            
+        except httpx.HTTPStatusError as e:
+            print(f"[JSearch] HTTP error: {e.response.status_code} - {e.response.text}")
+            raise
+        except Exception as e:
+            print(f"[JSearch] Error during API call: {e}")
+            raise
     
-    def _parse_job_item(self, item: Dict[str, Any]) -> Optional[RawJobListing]:
-        """Parse a single JSearch job item."""
-        job_data = item.get("job", item)  # Handle both nested and flat structures
+    def _build_location(self, job: dict) -> Optional[str]:
+        """Build location string from city and country."""
+        city = job.get("job_city")
+        country = job.get("job_country")
         
-        if not job_data:
+        if city and country:
+            return f"{city}, {country}"
+        return city or country or "Remote"
+    
+    def _format_salary(self, job: dict) -> Optional[str]:
+        """Format salary from min/max fields."""
+        min_salary = job.get("job_min_salary")
+        max_salary = job.get("job_max_salary")
+        currency = job.get("job_salary_currency", "GBP")
+        
+        if not min_salary and not max_salary:
             return None
         
-        # Extract posted date
-        posted_at = None
-        date_posted = job_data.get("job_posted_at_datetime_utc") or job_data.get("date_posted")
-        if date_posted:
-            try:
-                posted_at = datetime.fromisoformat(date_posted.replace("Z", "+00:00"))
-            except:
-                pass
+        symbol = "£" if currency == "GBP" else "$" if currency == "USD" else "€" if currency == "EUR" else currency
         
-        # Determine remote status
-        remote = False
-        is_remote = job_data.get("job_is_remote")
-        if is_remote is not None:
-            remote = bool(is_remote)
-        
-        # Build description
-        description = job_data.get("job_description", "")
-        if not description:
-            highlights = job_data.get("job_highlights", [])
-            if highlights:
-                description = "\n".join([
-                    q for h in highlights if isinstance(h, dict)
-                    for q in h.get("items", [])
-                ])
-        
-        return RawJobListing(
-            title=job_data.get("job_title", ""),
-            company=job_data.get("employer_name") or job_data.get("company"),
-            location=job_data.get("job_location") or job_data.get("location"),
-            description=description,
-            url=job_data.get("job_apply_link") or job_data.get("job_google_link") or job_data.get("url"),
-            salary_text=job_data.get("job_min_salary") or job_data.get("job_max_salary") or job_data.get("job_salary"),
-            posted_at=posted_at,
-            source="jsearch",
-            raw_data=item,
-            remote=remote
-        )
+        if min_salary and max_salary and min_salary != max_salary:
+            return f"{symbol}{min_salary:,} - {symbol}{max_salary:,}"
+        elif min_salary or max_salary:
+            return f"{symbol}{min_salary or max_salary:,}"
+        return None
+    
+    def _parse_date(self, date_str: Optional[str]) -> Optional[datetime]:
+        """Parse ISO date string to datetime."""
+        if not date_str:
+            return None
+        try:
+            return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+        except:
+            return None
 
 
 async def scrape_with_jsearch(

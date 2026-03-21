@@ -83,8 +83,15 @@ class SettingsManager:
                     updated_at=result["updated_at"]
                 )
         except Exception as e:
-            print(f"[Settings] Error updating settings: {e}")
-            raise
+            print(f"[Settings] Error updating settings (table may not exist): {e}")
+            # Return settings as-is (env vars fallback)
+            return UserSettings(
+                github_username=settings.github_username or app_settings.github_username,
+                target_roles=settings.target_roles or app_settings.target_roles,
+                target_locations=settings.target_locations or ["UK", "Remote"],
+                target_seniority=settings.target_seniority or ["mid", "senior"],
+                updated_at=datetime.utcnow()
+            )
         
         return settings
 

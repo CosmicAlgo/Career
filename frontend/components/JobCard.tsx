@@ -69,15 +69,16 @@ export default function JobCard({ job, match }: JobCardProps) {
             )}
           </div>
           
-          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
-            {job.company && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <svg style={{ height: '12px', width: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-9a2 2 0 0 1 4 0v9"/>
-                </svg>
-                {job.company}
-              </span>
-            )}
+          {/* Company */}
+          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#94a3b8', fontWeight: 500 }}>
+            <svg style={{ height: '14px', width: '14px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-9a2 2 0 0 1 4 0v9"/>
+            </svg>
+            {job.company || 'Unknown Company'}
+          </div>
+
+          {/* Location & Remote */}
+          <div style={{ marginTop: '2px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
             {job.location && (
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <svg style={{ height: '12px', width: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -85,13 +86,37 @@ export default function JobCard({ job, match }: JobCardProps) {
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
                 {job.location}
-                {job.remote && <span style={{ color: '#22c55e' }}>(Remote)</span>}
+              </span>
+            )}
+            {job.remote && (
+              <span style={{
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontFamily: 'JetBrains Mono, monospace',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                color: '#22c55e',
+                border: '1px solid rgba(34, 197, 94, 0.3)',
+                textTransform: 'uppercase'
+              }}>
+                Remote
               </span>
             )}
           </div>
 
+          {/* Salary */}
+          {formatSalary() && (
+            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontFamily: 'JetBrains Mono, monospace', color: '#22c55e' }}>
+              <svg style={{ height: '14px', width: '14px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" x2="12" y1="2" y2="22"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              {formatSalary()}
+            </div>
+          )}
+
           {/* Skills */}
-          {job.required_skills.length > 0 && (
+          {job.required_skills && job.required_skills.length > 0 && (
             <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {job.required_skills.slice(0, 5).map(skill => (
                 <span 
@@ -131,56 +156,44 @@ export default function JobCard({ job, match }: JobCardProps) {
           )}
         </div>
 
-        {/* Right side */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-          {formatSalary() && (
-            <span style={{
-              display: 'flex',
+        {/* Apply Button */}
+        {job.url && (
+          <a 
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '4px',
-              fontSize: '12px',
+              gap: '6px',
+              padding: '10px 20px',
+              borderRadius: '6px',
+              backgroundColor: '#22c55e',
+              color: '#000',
               fontFamily: 'JetBrains Mono, monospace',
-              color: '#22c55e'
-            }}>
-              <svg style={{ height: '12px', width: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" x2="12" y1="2" y2="22"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-              {formatSalary()}
-            </span>
-          )}
-          {job.seniority && (
-            <span style={{
-              fontSize: '12px',
-              fontFamily: 'JetBrains Mono, monospace',
-              color: '#64748b',
-              textTransform: 'uppercase'
-            }}>
-              {job.seniority}
-            </span>
-          )}
-          {job.url && (
-            <a 
-              href={job.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                padding: '6px',
-                borderRadius: '4px',
-                backgroundColor: '#0a0a0f',
-                color: '#94a3b8',
-                textDecoration: 'none',
-                transition: 'all 0.2s'
-              }}
-            >
-              <svg style={{ height: '16px', width: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                <polyline points="15 3 21 3 21 9"/>
-                <line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-            </a>
-          )}
-        </div>
+              fontSize: '13px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#16a34a';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#22c55e';
+            }}
+          >
+            <svg style={{ height: '14px', width: '14px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Apply Now
+          </a>
+        )}
       </div>
 
       {/* Source badge */}
@@ -188,17 +201,13 @@ export default function JobCard({ job, match }: JobCardProps) {
         position: 'absolute',
         top: '8px',
         right: '8px',
-        opacity: 0,
-        transition: 'opacity 0.2s'
+        opacity: 0.5,
+        fontSize: '10px',
+        fontFamily: 'JetBrains Mono, monospace',
+        color: '#475569',
+        textTransform: 'uppercase'
       }}>
-        <span style={{
-          fontSize: '10px',
-          fontFamily: 'JetBrains Mono, monospace',
-          color: '#475569',
-          textTransform: 'uppercase'
-        }}>
-          {job.source}
-        </span>
+        {job.source}
       </div>
     </div>
   );
