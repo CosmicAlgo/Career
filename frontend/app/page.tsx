@@ -62,11 +62,20 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
           <ScoreCard title="Overall Score" score={score?.overall_score || 0} size="md" />
-          {score?.role_scores && Object.entries(score.role_scores).slice(0, 3).map(([role, scoreVal]) => (
-            <ScoreCard key={role} title={role.replace(/_/g, ' ').toUpperCase()} score={scoreVal} size="sm" />
-          ))}
+          {score?.role_scores?.ml_engineer !== undefined && (
+            <ScoreCard title="ML ENGINEER" score={score.role_scores.ml_engineer} size="sm" />
+          )}
+          {score?.role_scores?.mlops !== undefined && (
+            <ScoreCard title="MLOPS" score={score.role_scores.mlops} size="sm" />
+          )}
+          {score?.role_scores?.devops !== undefined && (
+            <ScoreCard title="DEVOPS" score={score.role_scores.devops} size="sm" />
+          )}
+          {score?.role_scores?.backend !== undefined && (
+            <ScoreCard title="BACKEND" score={score.role_scores.backend} size="sm" />
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', alignItems: 'start' }}>
