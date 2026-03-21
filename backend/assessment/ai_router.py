@@ -5,16 +5,23 @@ Routes AI requests to appropriate provider (Gemini or Claude)
 
 from typing import Protocol
 from abc import abstractmethod
+from typing import Dict, Any
 
 from config.settings import settings
-from api.schemas import AssessmentPayload, AssessmentResult
+from assessment.assessment_schema import AssessmentResult
 
 
 class AIClient(Protocol):
     """Protocol for AI clients."""
     
     @abstractmethod
-    async def assess_profile(self, payload: AssessmentPayload) -> AssessmentResult:
+    async def assess_profile(
+        self,
+        github_summary: Dict[str, Any],
+        target_roles: list,
+        job_listings: list,
+        assessment_date: str
+    ) -> AssessmentResult:
         """Run profile assessment and return results."""
         ...
 
@@ -22,45 +29,56 @@ class AIClient(Protocol):
 class MockAIClient:
     """Mock AI client for testing."""
     
-    async def assess_profile(self, payload: AssessmentPayload) -> AssessmentResult:
+    async def assess_profile(
+        self,
+        github_summary: Dict[str, Any],
+        target_roles: list,
+        job_listings: list,
+        assessment_date: str
+    ) -> AssessmentResult:
         """Return mock assessment."""
-        from api.schemas import AssessmentResult, SkillGap, JobMatch
+        from assessment.assessment_schema import SkillGap, JobMatch
+        from assessment.prompt_templates import create_fallback_assessment
         
-        return AssessmentResult(
-            overall_score=72,
-            role_scores={
-                "ml_engineer": 74,
-                "mlops": 70,
-                "devops": 68,
-                "backend": 65
-            },
-            top_matching_jobs=[
-                JobMatch(job_id="mock-1", match_pct=85, reasons=["Python", "GitHub"])
-            ],
-            skill_gaps=[
-                SkillGap(skill="Kubernetes", frequency_in_market=45, priority="high"),
-                SkillGap(skill="Terraform", frequency_in_market=32, priority="medium"),
-                SkillGap(skill="AWS", frequency_in_market=58, priority="high")
-            ],
-            strengths=[
-                "Active open source contributions",
-                "Strong Python fundamentals",
-                "Consistent commit history"
-            ],
-            weekly_recommendation="Focus on learning Kubernetes this week.",
-            trending_skills_today=["Kubernetes", "Docker", "Python", "AWS", "React"]
+        return create_fallback_assessment(
+            github_languages=list(github_summary.get('languages', {}).keys()),
+            job_count=len(job_listings)
         )
 
 
 def get_ai_client() -> AIClient:
-    """Get the appropriate AI client based on settings."""
-    if settings.ai_provider == "gemini" and settings.google_ai_api_key:
+    """
+    Get the appropriate AI client based on settings.
+    
+    Routes based on AI_PROVIDER env var:
+    - "gemini": Use Google Gemini Flash 2.5 (default, free tier)
+    - "claude": Use Anthropic Claude (premium, requires ANTHROPIC_API_KEY)
+    - Fallback to MockAIClient if neither is configured
+    """
+    provider = settings.ai_provider.lower()
+    
+    if provider == "gemini" and settings.google_ai_api_key:
         from assessment.gemini_client import GeminiClient
         return GeminiClient()
-    elif settings.ai_provider == "claude" and settings.anthropic_api_key:
-        # Claude client would be implemented here
-        # For now, fall back to mock
-        return MockAIClient()
-    else:
-        # No valid AI provider configured, use mock
-        return MockAIClient()
+    
+    elif provider == "claude" and settings.anthropic_api_key:
+        from assessment.claude_client import ClaudeClient
+        return ClaudeClient()
+    
+    # No valid AI provider configured, use mock
+    print(f"[AI Router] Warning: AI provider '{provider}' not available or not configured.")
+    print("[AI Router] Using mock client. Set GOOGLE_AI_API_KEY or ANTHROPIC_API_KEY.")
+    return MockAIClient()
+
+
+async def run_assessment(
+    github_summary: Dict[str, Any],
+    target_roles: list,
+    job_listings: list,
+    assessment_date: str
+) -> AssessmentResult:
+    """Convenience function to run assessment with the configured AI provider."""
+    client = get_ai_client()
+    return await client.assess_profile(
+        github_summary, target_roles, job_listings, assessment_date
+    )

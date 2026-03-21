@@ -25,6 +25,11 @@ apscheduler==3.10.4
 
 # Data Processing
 python-dateutil==2.8.2
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
+# Web Scraping
+playwright==1.41.0
 
 # Utilities
 python-dotenv==1.0.0
