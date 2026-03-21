@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 interface ScoreCardProps {
   title: string;
   score: number;
@@ -15,6 +17,26 @@ export default function ScoreCard({
   subtitle,
   size = 'md' 
 }: ScoreCardProps) {
+  const [displayScore, setDisplayScore] = useState(0);
+  
+  useEffect(() => {
+    const duration = 1000; // 1 second animation
+    const steps = 30;
+    const increment = score / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= score) {
+        setDisplayScore(score);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.floor(current));
+      }
+    }, duration / steps);
+    
+    return () => clearInterval(timer);
+  }, [score]);
   const getScoreColor = (s: number) => {
     if (s >= 80) return '#22c55e';
     if (s >= 60) return '#fbbf24';
@@ -96,7 +118,7 @@ export default function ScoreCard({
           fontSize: scoreSize,
           color: scoreColor
         }}>
-          {score}
+          {displayScore}
           <span style={{ fontSize: '18px', color: '#475569', marginLeft: '4px' }}>/100</span>
         </div>
 

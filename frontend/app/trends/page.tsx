@@ -24,7 +24,12 @@ export default function TrendsPage() {
           </div>
           <ChartSkeleton />
         </main>
-        <style jsx global>{\@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }\}</style>
+        <style jsx global>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+        `}</style>
       </div>
     );
   }
@@ -34,7 +39,7 @@ export default function TrendsPage() {
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
         <Navbar />
         <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
-          <ErrorState message= Failed to load trends data onRetry={() => mutate()} />
+          <ErrorState message="Failed to load trends data" onRetry={() => mutate()} />
         </main>
       </div>
     );
@@ -76,7 +81,7 @@ export default function TrendsPage() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <ScoreCard title=Current Score score={score?.overall_score || 0} size=md />
+          <ScoreCard title="Current Score" score={score?.overall_score || 0} size="md" />
           <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px' }}>
             <p style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', margin: 0 }}>TREND PERIOD</p>
             <p style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#e2e8f0', margin: '8px 0 0 0' }}>{days} DAYS</p>
@@ -87,7 +92,7 @@ export default function TrendsPage() {
           <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase', margin: '0 0 24px 0' }}>
             Score History
           </h2>
-          {trends && trends.scores.length > 0 ? (
+          {trends?.scores && trends.scores.length > 0 ? (
             <TrendChart data={trends.scores} />
           ) : (
             <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>

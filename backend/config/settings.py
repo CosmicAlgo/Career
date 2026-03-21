@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     )
     
     # GitHub Configuration
-    github_token: str = Field(..., description="GitHub personal access token")
-    github_username: str = Field(..., description="GitHub username to analyze")
+    github_token: str = Field(default="", description="GitHub personal access token")
+    github_username: str = Field(default="", description="GitHub username to analyze")
     
     # AI Provider Configuration
     ai_provider: str = Field(default="gemini", description="AI provider: gemini or claude")
@@ -35,9 +35,9 @@ class Settings(BaseSettings):
     apify_token: str = Field(default="", description="Apify API token")
     
     # Supabase Configuration
-    supabase_url: str = Field(..., description="Supabase project URL")
-    supabase_anon_key: str = Field(..., description="Supabase anon key")
-    supabase_service_role_key: str = Field(..., description="Supabase service role key")
+    supabase_url: str = Field(default="", description="Supabase project URL")
+    supabase_anon_key: str = Field(default="", description="Supabase anon key")
+    supabase_service_role_key: str = Field(default="", description="Supabase service role key")
     
     # Target Configuration
     target_roles: List[str] = Field(
@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     
     # App Configuration
     backend_url: str = Field(default="http://localhost:8000", description="Backend URL")
+    
+    # Error Tracking
+    sentry_dsn: str = Field(default="", description="Sentry DSN for error tracking")
+    environment: str = Field(default="development", description="Environment: development/production")
     
     @field_validator("target_roles", "target_locations", "target_seniority", mode="before")
     @classmethod

@@ -33,3 +33,6 @@ playwright
 
 # Utilities
 python-dotenv
+
+# Error Tracking
+sentry-sdk[fastapi]

@@ -7,6 +7,8 @@ import asyncio
 from typing import List, Dict, Optional, Any
 from datetime import date, datetime
 
+import sentry_sdk
+
 from config.settings import settings
 from ingestion.github_client import GitHubClient, get_github_summary
 from api.schemas import (
@@ -180,6 +182,7 @@ class DailyPipelineRunner:
             results["success"] = False
             results["message"] = f"Pipeline failed: {str(e)}"
             print(f"[Pipeline] Error: {e}")
+            sentry_sdk.capture_exception(e)
             raise
         
         return results

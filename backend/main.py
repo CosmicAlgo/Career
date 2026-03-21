@@ -7,6 +7,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -16,6 +17,16 @@ from config.settings import settings
 from api.routes import router
 from database.supabase_client import supabase_manager
 from pipeline.daily_runner import run_daily_pipeline
+
+
+# Initialize Sentry if DSN is configured
+if settings.sentry_dsn:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        traces_sample_rate=0.1,
+        environment=settings.environment,
+    )
+    print(f"Sentry initialized for {settings.environment} environment")
 
 
 # Global scheduler instance

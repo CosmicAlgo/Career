@@ -23,7 +23,12 @@ export default function GapsPage() {
             <HeatmapSkeleton />
           </div>
         </main>
-        <style jsx global>{\@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }\}</style>
+        <style jsx global>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+        `}</style>
       </div>
     );
   }
@@ -33,7 +38,7 @@ export default function GapsPage() {
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
         <Navbar />
         <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
-          <ErrorState message= Failed to load skill gaps data onRetry={() => mutate()} />
+          <ErrorState message="Failed to load skill gaps data" onRetry={() => mutate()} />
         </main>
       </div>
     );
@@ -50,7 +55,7 @@ export default function GapsPage() {
             SKILL <span style={{ color: '#fbbf24' }}>::</span> GAPS
           </h1>
           <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', marginTop: '4px' }}>
-            {gapCount > 0 ? >  gaps identified : '> No gaps identified'}
+            {gapCount > 0 ? `> ${gapCount} gaps identified` : '> No gaps identified'}
           </p>
         </div>
 
