@@ -3,6 +3,7 @@
 .env.local
 .env.production
 .env.*.local
+.env.sentry-build-plugin
 
 # Python
 __pycache__/
