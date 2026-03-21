@@ -143,3 +143,11 @@ export interface HealthResponse {
   version: string;
   timestamp: string;
 }
+
+export interface SettingsResponse {
+  github_username: string;
+  target_roles: string[];
+  target_locations: string[];
+  target_seniority: string[];
+  updated_at?: string;
+}

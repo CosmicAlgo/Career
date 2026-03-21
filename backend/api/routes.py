@@ -329,3 +329,20 @@ async def get_pipeline_status():
         total_snapshots=len(snapshots),
         jobs_today=jobs_today
     )
+
+
+# ============ Settings Routes ============
+
+from api.settings import UserSettings, get_settings_manager
+
+@router.get("/api/settings", response_model=UserSettings, tags=["Settings"])
+async def get_user_settings():
+    """Get user settings from Supabase or env fallback."""
+    manager = get_settings_manager()
+    return await manager.get_settings()
+
+@router.post("/api/settings", response_model=UserSettings, tags=["Settings"])
+async def update_user_settings(settings: UserSettings):
+    """Update user settings in Supabase."""
+    manager = get_settings_manager()
+    return await manager.update_settings(settings)

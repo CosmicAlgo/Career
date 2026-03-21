@@ -13,6 +13,7 @@ import {
   RefreshResponse,
   PipelineStatus,
   HealthResponse,
+  SettingsResponse,
 } from './types';
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -99,4 +100,16 @@ export async function triggerRefresh(force?: boolean): Promise<RefreshResponse> 
 
 export async function getPipelineStatus(): Promise<PipelineStatus> {
   return fetchApi<PipelineStatus>('/api/status');
+}
+
+// Settings
+export async function getSettings(): Promise<SettingsResponse> {
+  return fetchApi<SettingsResponse>('/api/settings');
+}
+
+export async function updateSettings(settings: Partial<SettingsResponse>): Promise<SettingsResponse> {
+  return fetchApi<SettingsResponse>('/api/settings', {
+    method: 'POST',
+    body: JSON.stringify(settings),
+  });
 }
