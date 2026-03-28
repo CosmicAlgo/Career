@@ -157,6 +157,12 @@ export async function updateApplication(applicationId: string, update: UpdateApp
   });
 }
 
+export async function deleteApplication(applicationId: string): Promise<{ success: boolean; message: string }> {
+  return fetchApi<{ success: boolean; message: string }>(`/api/applications/${applicationId}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function getApplicationsByStatus(status: string): Promise<ApplicationsResponse> {
   return fetchApi<ApplicationsResponse>(`/api/applications/status/${status}`);
 }
