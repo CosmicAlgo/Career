@@ -35,9 +35,10 @@ COPY assessment/ $APP_HOME/assessment/
 COPY utils/ $APP_HOME/utils/
 COPY main.py $APP_HOME/
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser $APP_HOME
-USER appuser
+# Reuse existing pwuser from the Playwright base image (UID 1000)
+RUN chown -R pwuser:pwuser $APP_HOME
+USER pwuser
+
 
 # Expose port
 EXPOSE 8000
