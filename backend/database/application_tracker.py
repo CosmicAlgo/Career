@@ -169,6 +169,15 @@ class ApplicationTracker:
         except:
             return 0
 
+    async def delete_application(self, application_id: str) -> bool:
+        """Delete an application from the database."""
+        try:
+            response = self.client.client.table("job_applications").delete().eq("id", application_id).execute()
+            return len(response.data) > 0
+        except Exception as e:
+            print(f"[ApplicationTracker] Error deleting application: {e}")
+            return False
+
 
 # Singleton instance
 application_tracker = ApplicationTracker()

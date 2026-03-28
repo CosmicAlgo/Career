@@ -785,9 +785,18 @@ class DailyPipelineRunner:
                 reasons=["Skill match via local ML"]
             ))
         
+        # Build role_scores from actual target_roles (not hardcoded)
+        target_roles = self._db_settings.target_roles if self._db_settings else []
+        role_scores_out = {}
+        for role in target_roles:
+            role_key = role.lower().strip()
+            role_scores_out[role_key] = local_scores.get(role_key, local_scores.get("overall", 50))
+        
+        overall = local_scores.get("overall", 50)
+        
         return AssessmentResult(
-            overall_score=local_scores.get("overall", 50),
-            role_scores={k: v for k, v in local_scores.items() if k != "overall"},
+            overall_score=overall,
+            role_scores=role_scores_out,
             top_matching_jobs=top_jobs,
             skill_gaps=skill_gaps,
             strengths=["Local ML assessment completed"],

@@ -49,10 +49,18 @@ async def get_current_score():
         raise HTTPException(status_code=404, detail="No score data available. Run pipeline first.")
     
     assessment = snapshot.get("assessment", {})
+    role_scores = assessment.get("role_scores", {})
+    
+    # If overall_score column is 0 but role_scores exist, compute it from role_scores
+    stored_overall = snapshot.get("overall_score", 0)
+    if stored_overall == 0 and role_scores:
+        non_overall = {k: v for k, v in role_scores.items() if k != "overall"}
+        if non_overall:
+            stored_overall = int(sum(non_overall.values()) / len(non_overall))
     
     return ScoreResponse(
-        overall_score=snapshot.get("overall_score", 0),
-        role_scores=assessment.get("role_scores", {}),
+        overall_score=stored_overall,
+        role_scores=role_scores,
         date=date.fromisoformat(snapshot["date"])
     )
 
@@ -69,10 +77,19 @@ async def get_score_trends(
     trends = []
     for snap in snapshots:
         assessment = snap.get("assessment", {})
+        role_scores = assessment.get("role_scores", {})
+        
+        # Same fix: compute overall from role_scores if stored as 0
+        stored_overall = snap.get("overall_score", 0)
+        if stored_overall == 0 and role_scores:
+            non_overall = {k: v for k, v in role_scores.items() if k != "overall"}
+            if non_overall:
+                stored_overall = int(sum(non_overall.values()) / len(non_overall))
+        
         trends.append(TrendData(
             date=date.fromisoformat(snap["date"]),
-            overall_score=snap.get("overall_score", 0),
-            role_scores=assessment.get("role_scores", {})
+            overall_score=stored_overall,
+            role_scores=role_scores
         ))
     
     return TrendsResponse(trends=trends)
@@ -305,6 +322,7 @@ class PipelineStatus(BaseModel):
     
     today_ran: bool
     latest_snapshot_date: Optional[date] = None
+    latest_snapshot_time: Optional[str] = None  # HH:MM string for navbar
     total_snapshots: int
     jobs_today: int
 
@@ -321,6 +339,19 @@ async def get_pipeline_status():
     latest = await db.get_latest_snapshot()
     latest_date = date.fromisoformat(latest["date"]) if latest else None
     
+    # Extract time from created_at if available
+    latest_time = None
+    if latest and latest.get("created_at"):
+        try:
+            created_at_str = latest["created_at"]
+            if isinstance(created_at_str, str):
+                dt = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+            else:
+                dt = created_at_str
+            latest_time = dt.strftime("%H:%M")
+        except Exception:
+            pass
+    
     # Count snapshots (approximate via history)
     snapshots = await db.get_snapshot_history(days=365)
     
@@ -330,6 +361,7 @@ async def get_pipeline_status():
     return PipelineStatus(
         today_ran=today_ran,
         latest_snapshot_date=latest_date,
+        latest_snapshot_time=latest_time,
         total_snapshots=len(snapshots),
         jobs_today=jobs_today
     )
@@ -544,6 +576,24 @@ async def update_application(application_id: str, request: UpdateApplicationRequ
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update application: {str(e)}")
+
+
+@router.delete("/api/applications/{application_id}", tags=["Applications"])
+async def delete_application(application_id: str):
+    """Delete a job application."""
+    try:
+        success = await application_tracker.delete_application(application_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Application not found")
+        
+        return {
+            "success": True,
+            "message": "Application deleted successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete application: {str(e)}")
 
 
 @router.get("/api/applications/status/{status}", response_model=ApplicationsResponse, tags=["Applications"])

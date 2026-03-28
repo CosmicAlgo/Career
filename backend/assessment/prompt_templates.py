@@ -4,21 +4,24 @@ System and user prompt templates for AI assessment
 """
 
 import json
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from assessment.assessment_schema import AssessmentResult
 
 
-SYSTEM_PROMPT = """You are a senior technical recruiter and career coach specialising in ML,
-MLOps, DevOps, and backend engineering roles. You receive a candidate's
-GitHub profile summary and a list of real job postings from today's market.
+SYSTEM_PROMPT = """You are a senior technical recruiter and career coach specialising in software engineering,
+ML/AI, MLOps, DevOps, data engineering, backend, frontend, and full-stack engineering roles.
+
+You receive a candidate's GitHub profile summary and a list of real job postings from today's market.
 
 Your job is to:
-1. Score the candidate's profile against each target role category (0-100)
-2. Identify the top 5 skill gaps ranked by market frequency
+1. Score the candidate's profile against EACH of the specified target role categories (0-100). Score ONLY the roles listed under TARGET ROLES — do not add or omit any.
+2. Identify the top 5 skill gaps ranked by market frequency for those specific roles
 3. Highlight 3 genuine strengths visible from the GitHub data
 4. Surface the top 10 best-matching jobs with match percentage and reasons
 5. Identify trending skills appearing in today's postings
+
+IMPORTANT: The `role_scores` object MUST contain exactly the roles listed in TARGET ROLES with realistic non-zero scores based on the candidate's actual profile.
 
 Respond ONLY with valid JSON matching the provided schema exactly.
 No markdown, no preamble, no explanation outside the JSON object."""
@@ -258,7 +261,8 @@ def parse_assessment_response(response_data: Dict[str, Any]) -> AssessmentResult
 
 def create_fallback_assessment(
     github_languages: List[str],
-    job_count: int
+    job_count: int,
+    target_roles: Optional[List[str]] = None
 ) -> AssessmentResult:
     """Create a fallback assessment when AI call fails."""
     from assessment.assessment_schema import SkillGap, JobMatch
@@ -275,14 +279,16 @@ def create_fallback_assessment(
     # Base score on number of languages
     base_score = min(50 + len(github_languages) * 10, 85)
     
+    # Build role_scores dynamically from target_roles
+    roles = target_roles or ["ml_engineer", "mlops", "devops", "backend"]
+    role_scores = {}
+    for i, role in enumerate(roles):
+        role_key = role.lower().strip()
+        role_scores[role_key] = max(base_score - i * 5, 45)
+    
     return AssessmentResult(
         overall_score=base_score,
-        role_scores={
-            "ml_engineer": base_score,
-            "mlops": max(base_score - 5, 50),
-            "devops": max(base_score - 10, 45),
-            "backend": base_score
-        },
+        role_scores=role_scores,
         top_matching_jobs=[
             JobMatch(job_id=f"fallback-{i}", match_pct=70, reasons=["Skills align"])
             for i in range(min(5, job_count))
@@ -293,6 +299,6 @@ def create_fallback_assessment(
             f"Experience with {len(github_languages)} languages",
             "Consistent code contributions"
         ],
-        weekly_recommendation="Focus on learning container orchestration (Kubernetes) - it's the most in-demand skill gap.",
+        weekly_recommendation="Focus on closing high-priority skill gaps — check the Gaps page for specifics.",
         trending_skills_today=["Kubernetes", "Docker", "Python", "AWS", "React"]
     )

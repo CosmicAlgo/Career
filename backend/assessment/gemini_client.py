@@ -69,16 +69,16 @@ class GeminiClient:
         # Build prompts with local scores context if available
         local_scores_text = ""
         if local_scores:
-            local_scores_text = f"""
-Local ML similarity scores (0-100) computed from skill embeddings:
-- Overall: {local_scores.get('overall', 'N/A')}
-- ML Engineer: {local_scores.get('ml_engineer', 'N/A')}
-- MLOps: {local_scores.get('mlops', 'N/A')}
-- DevOps: {local_scores.get('devops', 'N/A')}
-- Backend: {local_scores.get('backend', 'N/A')}
-
-Use these as a baseline for your assessment but apply your own judgment based on the full profile context.
-"""
+            score_lines = [f"- Overall: {local_scores.get('overall', 'N/A')}"]
+            for role in target_roles:
+                role_key = role.lower().strip()
+                if role_key in local_scores:
+                    score_lines.append(f"- {role_key.replace('_', ' ').title()}: {local_scores[role_key]}")
+            local_scores_text = (
+                "\nLocal ML similarity scores (0-100) computed from skill embeddings:\n"
+                + "\n".join(score_lines)
+                + "\n\nUse these as a baseline for your assessment but apply your own judgment based on the full profile context.\n"
+            )
         
         user_prompt = build_user_prompt(
             github_summary=github_summary,
