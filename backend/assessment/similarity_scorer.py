@@ -151,18 +151,31 @@ def aggregate_role_scores(
         else:
             role_scores[role] = 0
 
-    # Ensure all target roles have a score (default 50 if no jobs found)
+    # Ensure all target roles have a score (default 0 if no jobs found to prevent inflating averages)
     for role in target_roles:
         role_lower = role.lower().strip()
         if role_lower not in role_scores:
-            role_scores[role_lower] = 50  # Neutral score
+            role_scores[role_lower] = 0
 
-    # Compute overall score as average of role scores
-    if role_scores:
-        overall = sum(role_scores.values()) / len(role_scores)
+    # Compute overall score smartly:
+    # A user shouldn't be heavily penalized if 5 secondary roles don't match or lack data.
+    # Therefore, we heavily weight their primary (best) matched role against the others.
+    valid_scores = [score for role, score in role_scores.items() if score > 0]
+    
+    if valid_scores:
+        valid_scores.sort(reverse=True)
+        top_score = valid_scores[0]
+        
+        # 70% weight on best match, 30% averaged across other matched roles
+        if len(valid_scores) > 1:
+            rest_avg = sum(valid_scores[1:]) / len(valid_scores[1:])
+            overall = (top_score * 0.70) + (rest_avg * 0.30)
+        else:
+            overall = top_score
+            
         role_scores["overall"] = int(overall)
     else:
-        role_scores["overall"] = 50
+        role_scores["overall"] = 0
 
     return role_scores
 

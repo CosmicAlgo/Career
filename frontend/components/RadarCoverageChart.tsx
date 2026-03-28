@@ -123,44 +123,62 @@ const AXIS_GITHUB_KEYWORDS: Record<string, string[]> = {
 
 function getGithubAxisScore(axis: string, snapshot: SnapshotResponse): number {
   const keywords = AXIS_GITHUB_KEYWORDS[axis] || [];
-  if (!snapshot?.github_data) return 0;
+  if (!snapshot?.github_data || keywords.length === 0) return 0;
 
-  let score = 0;
+  let rawScore = 0;
   const langs = Object.keys(snapshot.github_data.languages || {}).map((l) =>
     l.toLowerCase(),
   );
   const repos = snapshot.github_data.top_repos || [];
 
-  // Check languages
+  // Evaluate each keyword for the given axis
   for (const kw of keywords) {
-    if (langs.some((l) => l.includes(kw))) score += 25;
-  }
+    let kwScore = 0;
 
-  // Check repo topics and names
-  for (const repo of repos) {
-    const topics = (repo.topics || []).map((t) => t.toLowerCase());
-    const name = (repo.name || "").toLowerCase();
-    const desc = (repo.description || "").toLowerCase();
-    for (const kw of keywords) {
-      if (
-        topics.some((t) => t.includes(kw)) ||
-        name.includes(kw) ||
-        desc.includes(kw)
-      ) {
-        score += 10;
-        break;
+    // Primary evidence: Language stats (shows sustained usage)
+    if (langs.some((l) => l.includes(kw))) {
+      kwScore = Math.max(kwScore, 50); // Base 50 for direct language match
+    }
+
+    // Secondary evidence: Repo topics, names, descriptions
+    let repoHits = 0;
+    for (const repo of repos) {
+      const topics = (repo.topics || []).map((t) => t.toLowerCase());
+      const name = (repo.name || "").toLowerCase();
+      const desc = (repo.description || "").toLowerCase();
+
+      if (topics.some((t) => t.includes(kw))) {
+        repoHits += 2; // Dedicated topic is strong evidence
+      } else if (name.includes(kw) || desc.includes(kw)) {
+        repoHits += 1; // Mentioned in description or name
       }
     }
+
+    if (repoHits > 0) {
+      // Add up to 40 points for practical repo evidence
+      kwScore += Math.min(40, repoHits * 15);
+    }
+
+    rawScore += kwScore;
   }
 
-  // Also look at skill gaps — if a skill is in your profile (not a gap), you cover it
+  // Normalize: We don't expect all keywords simultaneously.
+  // 1 strong core match (e.g. 65 rawScore) gives a very solid base.
+  let normalizedScore = rawScore > 0 ? 30 + rawScore * 0.7 : 0;
+
+  // Cross-reference with AI-identified skill gaps
+  // If the axis overlaps with a known gap, penalize the score instead of boosting it
   const gaps =
     snapshot.assessment?.skill_gaps?.map((g) => g.skill.toLowerCase()) || [];
-  for (const kw of keywords) {
-    if (!gaps.some((g) => g.includes(kw))) score += 5; // not a gap = presumably covered
+  const axisGaps = gaps.filter((g) =>
+    keywords.some((kw) => g.includes(kw) || kw.includes(g)),
+  );
+
+  if (axisGaps.length > 0) {
+    normalizedScore -= axisGaps.length * 20; // Significant penalty for verified gaps
   }
 
-  return Math.min(100, score);
+  return Math.max(0, Math.min(100, Math.round(normalizedScore)));
 }
 
 function buildChartData(

@@ -99,12 +99,14 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {snapshot && !snapshot.assessment?.overall_score && (
-            <div className="mb-6 p-4 rounded-lg border border-primary/30 bg-primary/5 text-primary text-sm font-mono flex items-center gap-2">
-              <span className="text-lg">⚠</span> No market data yet — add a
-              RapidAPI key to enable job matching
-            </div>
-          )}
+          {snapshot &&
+            (!snapshot.assessment ||
+              typeof snapshot.assessment.overall_score !== "number") && (
+              <div className="mb-6 p-4 rounded-lg border border-primary/30 bg-primary/5 text-primary text-sm font-mono flex items-center gap-2">
+                <span className="text-lg">⚠</span> No market data yet — add a
+                RapidAPI key to enable job matching
+              </div>
+            )}
 
           {/* Score Cards — Overall + all dynamic role scores */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
