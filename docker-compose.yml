@@ -7,21 +7,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - GITHUB_USERNAME=${GITHUB_USERNAME}
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
-      - RAPIDAPI_KEY=${RAPIDAPI_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 10s
     restart: unless-stopped
 
   frontend:
@@ -30,8 +25,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     environment:
       - NEXT_PUBLIC_BACKEND_URL=http://backend:8000
+    env_file:
+      - .env
     depends_on:
       backend:
         condition: service_healthy

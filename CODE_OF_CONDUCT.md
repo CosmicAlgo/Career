@@ -5,6 +5,7 @@
 CareerRadar is a welcoming project. Everyone contributing or participating is expected to be respectful, constructive, and considerate — regardless of experience level, background, or how many GitHub stars they have.
 
 Specifically:
+
 - Be kind in code reviews and issue comments
 - Welcome newcomers — everyone was a beginner once
 - Disagree on ideas, not on people

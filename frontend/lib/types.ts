@@ -48,7 +48,7 @@ export interface JobMatch {
 export interface SkillGap {
   skill: string;
   frequency_in_market: number;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 export interface AssessmentResult {
@@ -160,7 +160,14 @@ export interface JobApplication {
   company: string;
   source_url?: string;
   source: string;
-  status: 'interested' | 'applied' | 'phone_screen' | 'technical' | 'final' | 'offer' | 'rejected';
+  status:
+    | "interested"
+    | "applied"
+    | "phone_screen"
+    | "technical"
+    | "final"
+    | "offer"
+    | "rejected";
   date_applied?: string;
   notes?: string;
   salary_range?: string;

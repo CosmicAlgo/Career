@@ -15,7 +15,7 @@ CREATE INDEX IF NOT EXISTS idx_user_settings_updated_at ON user_settings(updated
 
 -- Insert default settings if table is empty
 INSERT INTO user_settings (github_username, target_roles, target_locations, target_seniority)
-SELECT 'octocat', 
+SELECT 'octocat',
        ARRAY['ml_engineer', 'mlops', 'devops', 'backend']::TEXT[],
        ARRAY['UK', 'Remote', 'London']::TEXT[],
        ARRAY['mid', 'senior']::TEXT[]

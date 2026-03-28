@@ -34,16 +34,12 @@ ASSESSMENT_JSON_SCHEMA = {
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
-            "description": "Overall profile match score 0-100"
+            "description": "Overall profile match score 0-100",
         },
         "role_scores": {
             "type": "object",
-            "additionalProperties": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 100
-            },
-            "description": "Per-role scores (e.g., ml_engineer: 74)"
+            "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100},
+            "description": "Per-role scores (e.g., ml_engineer: 74)",
         },
         "top_matching_jobs": {
             "type": "array",
@@ -52,10 +48,10 @@ ASSESSMENT_JSON_SCHEMA = {
                 "properties": {
                     "job_id": {"type": "string"},
                     "match_pct": {"type": "integer", "minimum": 0, "maximum": 100},
-                    "reasons": {"type": "array", "items": {"type": "string"}}
+                    "reasons": {"type": "array", "items": {"type": "string"}},
                 },
-                "required": ["job_id", "match_pct", "reasons"]
-            }
+                "required": ["job_id", "match_pct", "reasons"],
+            },
         },
         "skill_gaps": {
             "type": "array",
@@ -64,25 +60,25 @@ ASSESSMENT_JSON_SCHEMA = {
                 "properties": {
                     "skill": {"type": "string"},
                     "frequency_in_market": {"type": "integer"},
-                    "priority": {"type": "string", "enum": ["high", "medium", "low"]}
+                    "priority": {"type": "string", "enum": ["high", "medium", "low"]},
                 },
-                "required": ["skill", "frequency_in_market", "priority"]
-            }
+                "required": ["skill", "frequency_in_market", "priority"],
+            },
         },
         "strengths": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "3 genuine strengths visible from GitHub data"
+            "description": "3 genuine strengths visible from GitHub data",
         },
         "weekly_recommendation": {
             "type": "string",
-            "description": "One specific, actionable recommendation for this week"
+            "description": "One specific, actionable recommendation for this week",
         },
         "trending_skills_today": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Skills trending in today's job postings"
-        }
+            "description": "Skills trending in today's job postings",
+        },
     },
     "required": [
         "overall_score",
@@ -91,8 +87,8 @@ ASSESSMENT_JSON_SCHEMA = {
         "skill_gaps",
         "strengths",
         "weekly_recommendation",
-        "trending_skills_today"
-    ]
+        "trending_skills_today",
+    ],
 }
 
 
@@ -100,17 +96,17 @@ def build_user_prompt(
     github_summary: Dict[str, Any],
     target_roles: List[str],
     job_listings: List[Dict[str, Any]],
-    assessment_date: str
+    assessment_date: str,
 ) -> str:
     """
     Build the user prompt with GitHub data and job listings.
-    
+
     Args:
         github_summary: GitHub profile summary dict
         target_roles: List of target role names
         job_listings: List of job listing dicts
         assessment_date: Date string (ISO format)
-        
+
     Returns:
         Formatted user prompt string
     """
@@ -124,16 +120,16 @@ Followers: {github_summary.get('followers', 0)}
 Languages: {json.dumps(github_summary.get('languages', {}), indent=2)}
 Top Repositories:
 """
-    
-    for repo in github_summary.get('top_repos', []):
+
+    for repo in github_summary.get("top_repos", []):
         github_section += f"""
   - {repo.get('name', 'Unknown')}: {repo.get('stars', 0)} stars
     Description: {repo.get('description', 'N/A')}
     Language: {repo.get('language', 'N/A')}
     Topics: {', '.join(repo.get('topics', []))}
 """
-    
-    contribution = github_summary.get('contribution_stats', {})
+
+    contribution = github_summary.get("contribution_stats", {})
     github_section += f"""
 Contribution Stats:
 - Total commits (last 90 days): {contribution.get('total_commits_last_90d', 0)}
@@ -142,10 +138,10 @@ Contribution Stats:
 
 Certifications Detected: {', '.join(github_summary.get('certifications_detected', []))}
 """
-    
+
     # Build job listings section
     jobs_section = "\nJOB LISTINGS:\n"
-    
+
     for i, job in enumerate(job_listings[:20], 1):  # Limit to 20 jobs for token budget
         jobs_section += f"""
 Job {i}:
@@ -158,20 +154,20 @@ Job {i}:
 - Nice to Have: {', '.join(job.get('nice_to_have', []))}
 - Seniority: {job.get('seniority', 'N/A')}
 """
-    
+
     # Build target roles section
     roles_section = f"""
 TARGET ROLES: {', '.join(target_roles)}
 ASSESSMENT DATE: {assessment_date}
 """
-    
+
     return f"{github_section}\n{jobs_section}\n{roles_section}"
 
 
 def get_gemini_response_schema() -> Dict[str, Any]:
     """Get the response schema for Gemini's structured output."""
     from google.generativeai.types import Schema
-    
+
     return Schema(
         type="object",
         properties={
@@ -184,9 +180,9 @@ def get_gemini_response_schema() -> Dict[str, Any]:
                     "properties": {
                         "job_id": {"type": "string"},
                         "match_pct": {"type": "integer"},
-                        "reasons": {"type": "array", "items": {"type": "string"}}
-                    }
-                }
+                        "reasons": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
             },
             "skill_gaps": {
                 "type": "array",
@@ -195,48 +191,52 @@ def get_gemini_response_schema() -> Dict[str, Any]:
                     "properties": {
                         "skill": {"type": "string"},
                         "frequency_in_market": {"type": "integer"},
-                        "priority": {"type": "string"}
-                    }
-                }
+                        "priority": {"type": "string"},
+                    },
+                },
             },
             "strengths": {"type": "array", "items": {"type": "string"}},
             "weekly_recommendation": {"type": "string"},
-            "trending_skills_today": {"type": "array", "items": {"type": "string"}}
+            "trending_skills_today": {"type": "array", "items": {"type": "string"}},
         },
-        required=list(ASSESSMENT_JSON_SCHEMA["required"])
+        required=list(ASSESSMENT_JSON_SCHEMA["required"]),
     )
 
 
 def parse_assessment_response(response_data: Dict[str, Any]) -> AssessmentResult:
     """
     Parse AI response data into AssessmentResult.
-    
+
     Args:
         response_data: Raw response from AI
-        
+
     Returns:
         Validated AssessmentResult
     """
     from assessment.assessment_schema import SkillGap, JobMatch
-    
+
     # Parse skill gaps
     skill_gaps = []
     for gap_data in response_data.get("skill_gaps", []):
-        skill_gaps.append(SkillGap(
-            skill=gap_data.get("skill", ""),
-            frequency_in_market=gap_data.get("frequency_in_market", 0),
-            priority=gap_data.get("priority", "medium")
-        ))
-    
+        skill_gaps.append(
+            SkillGap(
+                skill=gap_data.get("skill", ""),
+                frequency_in_market=gap_data.get("frequency_in_market", 0),
+                priority=gap_data.get("priority", "medium"),
+            )
+        )
+
     # Parse job matches
     top_jobs = []
     for job_data in response_data.get("top_matching_jobs", []):
-        top_jobs.append(JobMatch(
-            job_id=job_data.get("job_id", ""),
-            match_pct=job_data.get("match_pct", 0),
-            reasons=job_data.get("reasons", [])
-        ))
-    
+        top_jobs.append(
+            JobMatch(
+                job_id=job_data.get("job_id", ""),
+                match_pct=job_data.get("match_pct", 0),
+                reasons=job_data.get("reasons", []),
+            )
+        )
+
     # Parse strengths - Gemini sometimes returns dicts instead of strings
     raw_strengths = response_data.get("strengths", [])
     strengths = []
@@ -247,7 +247,7 @@ def parse_assessment_response(response_data: Dict[str, Any]) -> AssessmentResult
             strengths.append(s.get("strength", s.get("description", str(s))))
         else:
             strengths.append(str(s))
-    
+
     return AssessmentResult(
         overall_score=response_data.get("overall_score", 0),
         role_scores=response_data.get("role_scores", {}),
@@ -255,37 +255,37 @@ def parse_assessment_response(response_data: Dict[str, Any]) -> AssessmentResult
         skill_gaps=skill_gaps,
         strengths=strengths,
         weekly_recommendation=response_data.get("weekly_recommendation", ""),
-        trending_skills_today=response_data.get("trending_skills_today", [])
+        trending_skills_today=response_data.get("trending_skills_today", []),
     )
 
 
 def create_fallback_assessment(
     github_languages: List[str],
     job_count: int,
-    target_roles: Optional[List[str]] = None
+    target_roles: Optional[List[str]] = None,
 ) -> AssessmentResult:
     """Create a fallback assessment when AI call fails."""
     from assessment.assessment_schema import SkillGap, JobMatch
-    
+
     # Common skills to suggest based on what's popular
     common_gaps = [
         SkillGap(skill="Kubernetes", frequency_in_market=45, priority="high"),
         SkillGap(skill="AWS/GCP/Azure", frequency_in_market=58, priority="high"),
         SkillGap(skill="Docker", frequency_in_market=42, priority="medium"),
         SkillGap(skill="CI/CD", frequency_in_market=35, priority="medium"),
-        SkillGap(skill="System Design", frequency_in_market=28, priority="medium")
+        SkillGap(skill="System Design", frequency_in_market=28, priority="medium"),
     ]
-    
+
     # Base score on number of languages
     base_score = min(50 + len(github_languages) * 10, 85)
-    
+
     # Build role_scores dynamically from target_roles
     roles = target_roles or ["ml_engineer", "mlops", "devops", "backend"]
     role_scores = {}
     for i, role in enumerate(roles):
         role_key = role.lower().strip()
         role_scores[role_key] = max(base_score - i * 5, 45)
-    
+
     return AssessmentResult(
         overall_score=base_score,
         role_scores=role_scores,
@@ -297,8 +297,8 @@ def create_fallback_assessment(
         strengths=[
             "Active GitHub presence",
             f"Experience with {len(github_languages)} languages",
-            "Consistent code contributions"
+            "Consistent code contributions",
         ],
         weekly_recommendation="Focus on closing high-priority skill gaps — check the Gaps page for specifics.",
-        trending_skills_today=["Kubernetes", "Docker", "Python", "AWS", "React"]
+        trending_skills_today=["Kubernetes", "Docker", "Python", "AWS", "React"],
     )

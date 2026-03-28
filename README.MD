@@ -10,7 +10,7 @@ CareerRadar pulls your GitHub profile, scrapes real job postings every morning, 
 
 ## The Problem
 
-Job hunting is blind. You apply, hear nothing, and have no idea whether your profile matches what the market actually wants today — not six months ago, not in general, but *today*.
+Job hunting is blind. You apply, hear nothing, and have no idea whether your profile matches what the market actually wants today — not six months ago, not in general, but _today_.
 
 CareerRadar fixes that by running a daily analysis loop:
 
@@ -38,15 +38,15 @@ Check it every morning. Watch your score move as you build.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 14 (App Router) + SWR + Inline CSS (Bloomberg Terminal aesthetic) |
-| Backend | FastAPI + APScheduler |
-| Database | Supabase (PostgreSQL) |
-| AI Assessment | Gemini Flash 2.5 (free tier) |
-| Job Scraping | JSearch RapidAPI + Apify + Playwright |
-| GitHub Ingestion | GitHub GraphQL API v4 |
-| Deployment | Vercel (frontend) + Railway (backend) |
+| Layer            | Technology                                                                |
+| ---------------- | ------------------------------------------------------------------------- |
+| Frontend         | Next.js 14 (App Router) + SWR + Inline CSS (Bloomberg Terminal aesthetic) |
+| Backend          | FastAPI + APScheduler                                                     |
+| Database         | Supabase (PostgreSQL)                                                     |
+| AI Assessment    | Gemini Flash 2.5 (free tier)                                              |
+| Job Scraping     | JSearch RapidAPI + Apify + Playwright                                     |
+| GitHub Ingestion | GitHub GraphQL API v4                                                     |
+| Deployment       | Vercel (frontend) + Railway (backend)                                     |
 
 ---
 
@@ -77,7 +77,7 @@ In your Supabase project, go to SQL Editor and run the schema from [`docs/schema
 cp .env.example .env
 ```
 
-Fill in your keys — see `.env.example` for all required variables. The only keys you *need* to get started are:
+Fill in your keys — see `.env.example` for all required variables. The only keys you _need_ to get started are:
 
 ```
 GITHUB_TOKEN=ghp_...
@@ -170,4 +170,4 @@ MIT — use it, fork it, build on it.
 
 ---
 
-*Built by [Rahul Surya](https://github.com/CosmicAlgo) — MSc HPC & Data Science, University of Edinburgh*
+_Built by [Rahul Surya](https://github.com/CosmicAlgo) — MSc HPC & Data Science, University of Edinburgh_

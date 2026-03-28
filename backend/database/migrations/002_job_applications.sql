@@ -68,12 +68,12 @@ BEGIN
     IF NEW.status = 'applied' AND OLD.status != 'applied' THEN
         NEW.follow_up_date = CURRENT_DATE + INTERVAL '7 days';
     END IF;
-    
+
     -- Clear follow-up date when offer or rejected
     IF NEW.status IN ('offer', 'rejected') THEN
         NEW.follow_up_date = NULL;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$ language 'plpgsql';

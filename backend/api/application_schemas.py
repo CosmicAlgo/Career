@@ -4,12 +4,13 @@ Pydantic models for job application tracking
 """
 
 from datetime import date, datetime
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+from pydantic import BaseModel
 
 
 class JobApplication(BaseModel):
     """Job application model."""
+
     id: Optional[str] = None
     user_id: Optional[str] = None
     job_title: str
@@ -25,16 +26,17 @@ class JobApplication(BaseModel):
     response_date: Optional[date] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
+
     class Config:
         json_encoders = {
             date: lambda v: v.isoformat() if v else None,
-            datetime: lambda v: v.isoformat() if v else None
+            datetime: lambda v: v.isoformat() if v else None,
         }
 
 
 class CreateApplicationRequest(BaseModel):
     """Request to create a new job application."""
+
     job_title: str
     company: str
     source_url: Optional[str] = None
@@ -47,6 +49,7 @@ class CreateApplicationRequest(BaseModel):
 
 class UpdateApplicationRequest(BaseModel):
     """Request to update a job application."""
+
     status: Optional[str] = None
     notes: Optional[str] = None
     response_date: Optional[date] = None
@@ -54,6 +57,7 @@ class UpdateApplicationRequest(BaseModel):
 
 class ApplicationResponse(BaseModel):
     """Response containing application data."""
+
     application: JobApplication
     success: bool
     message: str
@@ -61,6 +65,7 @@ class ApplicationResponse(BaseModel):
 
 class ApplicationsResponse(BaseModel):
     """Response containing multiple applications."""
+
     applications: List[JobApplication]
     total: int
     success: bool
@@ -68,6 +73,7 @@ class ApplicationsResponse(BaseModel):
 
 class ApplicationStats(BaseModel):
     """Application statistics."""
+
     total_applications: int
     by_status: Dict[str, int]
     by_source: Dict[str, int]
@@ -79,6 +85,7 @@ class ApplicationStats(BaseModel):
 
 class ApplicationStatsResponse(BaseModel):
     """Response containing application statistics."""
+
     stats: ApplicationStats
     success: bool
     days_analyzed: int
@@ -86,6 +93,7 @@ class ApplicationStatsResponse(BaseModel):
 
 class FollowUpResponse(BaseModel):
     """Response for follow-up reminders."""
+
     follow_ups: List[JobApplication]
     total: int
     success: bool
