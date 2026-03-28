@@ -23,6 +23,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: builder
     ports:
       - "3000:3000"
     # Dev: mount source and run Next.js dev server for hot-reloading.
