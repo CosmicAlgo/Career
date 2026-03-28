@@ -34,6 +34,7 @@ class DatabaseQueries:
                 "github_data": github_data.model_dump(mode="json"),
                 "assessment": assessment.model_dump(mode="json"),
                 "overall_score": overall_score,
+                "created_at": datetime.utcnow().isoformat(),
             }
 
             # Use UPSERT to update existing snapshot for the same date

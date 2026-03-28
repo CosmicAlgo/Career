@@ -57,8 +57,19 @@ export default function Navbar() {
       day: "2-digit",
       month: "short",
     });
-    const time = (status as any).latest_snapshot_time as string | undefined;
-    return time ? `${dateStr} · ${time}` : dateStr;
+    const timeStr = (status as any).latest_snapshot_time as string | undefined;
+    
+    // Check if the time string looks like an ISO string or just HH:MM
+    if (timeStr && timeStr.includes("T")) {
+      const timeDate = new Date(timeStr);
+      const localTime = timeDate.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      return `${dateStr} · ${localTime}`;
+    }
+    
+    return timeStr ? `${dateStr} · ${timeStr}` : dateStr;
   })();
 
   return (

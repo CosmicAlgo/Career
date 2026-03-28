@@ -366,7 +366,8 @@ async def get_pipeline_status():
                 dt = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
             else:
                 dt = created_at_str
-            latest_time = dt.strftime("%H:%M")
+            # Keep ISO format so front-end can convert to local browser timezone
+            latest_time = dt.isoformat()
         except Exception:
             pass
 
