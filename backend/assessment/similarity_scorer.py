@@ -98,6 +98,16 @@ def infer_job_role(job: NormalisedJob, target_roles: List[str]) -> Optional[str]
             "supercomputing",
             "distributed systems",
         ],
+        "project_manager": [
+            "project manager",
+            "project management",
+            "pmp",
+            "scrum master",
+            "agile lead",
+            "technical product manager",
+            "roadmap",
+            "agile",
+        ],
     }
 
     # Find best matching role

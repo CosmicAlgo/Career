@@ -61,6 +61,13 @@ const ROLE_MARKET_BASELINES: Record<string, Record<string, number>> = {
     "Cloud/HPC": 80,
     Profiling: 85,
   },
+  project_manager: {
+    Planning: 95,
+    Agile: 90,
+    Documentation: 85,
+    Communication: 80,
+    Governance: 75,
+  },
 };
 
 /*
@@ -186,6 +193,11 @@ const AXIS_GITHUB_KEYWORDS: Record<string, string[]> = {
     "benchmarking",
     "benchmark",
   ],
+  Planning: ["roadmap", "milestone", "project-management", "notion", "jira", "product", "strategy", "deliverables"],
+  Agile: ["sprint", "kanban", "scrum", "agile", "velocity", "backlog", "standup"],
+  Documentation: ["documentation", "docs", "wiki", "technical-writing", "tutorial", "guide", "readme"],
+  Communication: ["communication", "stakeholder", "presentation", "meeting", "feedback", "review", "discussion"],
+  Governance: ["security", "compliance", "policy", "audit", "governance", "standard", "legal"],
 };
 
 function getGithubAxisScore(axis: string, snapshot: SnapshotResponse): number {

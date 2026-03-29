@@ -41,6 +41,7 @@ ROLE_SLUG_MAP = {
     "sre": "Site Reliability Engineer",
     "platform": "Platform Engineer",
     "hpc_engineer": "HPC Engineer",
+    "project_manager": "Project Manager",
 }
 
 
