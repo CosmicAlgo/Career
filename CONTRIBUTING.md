@@ -44,7 +44,7 @@ In your Supabase project SQL editor, run `docs/schema.sql`.
 bash start.sh
 ```
 
-Backend: http://localhost:8000/docs  
+Backend: http://localhost:8000/docs
 Frontend: http://localhost:3000
 
 ---

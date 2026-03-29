@@ -1,33 +1,64 @@
-'use client';
+"use client";
+import { useState, useEffect } from "react";
 
-import Navbar from '@/components/Navbar';
-import ScoreCard from '@/components/ScoreCard';
-import SkillHeatmap from '@/components/SkillHeatmap';
-import GapList from '@/components/GapList';
-import { useDashboard } from '@/lib/swr-hooks';
-import { ScoreCardSkeleton, HeatmapSkeleton, GapListSkeleton, ErrorState } from '@/components/Skeleton';
+import Navbar from "@/components/Navbar";
+import ScoreCard from "@/components/ScoreCard";
+import SkillHeatmap from "@/components/SkillHeatmap";
+import GapList from "@/components/GapList";
+import RadarCoverageChart from "@/components/RadarCoverageChart";
+import { useDashboard, useSettings } from "@/lib/swr-hooks";
+import {
+  ScoreCardSkeleton,
+  HeatmapSkeleton,
+  GapListSkeleton,
+  ErrorState,
+} from "@/components/Skeleton";
+import { Github, TrendingUp, Target, Plus, CheckCircle2 } from "lucide-react";
 
 export default function Dashboard() {
-  const { score, snapshot, skillTrends, gaps, isLoading, error, mutate } = useDashboard();
+  const { score, snapshot, skillTrends, gaps, isLoading, error, mutate } =
+    useDashboard();
+  const { settings } = useSettings();
+
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+
+  // Set initial selected role to the one with the highest score
+  useEffect(() => {
+    if (score?.role_scores && !selectedRole) {
+      const roles = Object.entries(score.role_scores).sort(
+        (a, b) => (b[1] as number) - (a[1] as number),
+      );
+
+      if (roles.length > 0) {
+        setSelectedRole(roles[0][0]);
+      }
+    } else if (settings?.target_roles && !selectedRole) {
+      setSelectedRole(settings.target_roles[0]);
+    }
+  }, [score, settings, selectedRole]);
 
   if (error && !score && !snapshot) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <h1 style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
-              DASHBOARD <span style={{ color: '#fbbf24' }}>::</span> OVERVIEW
+        <main className="max-w-7xl mx-auto px-4 py-8 w-full">
+          <div className="mb-6">
+            <h1 className="text-2xl font-mono font-bold text-foreground tracking-tight">
+              DASHBOARD <span className="text-primary">::</span> OVERVIEW
             </h1>
           </div>
-          <div style={{ padding: '24px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.3)', backgroundColor: 'rgba(251, 191, 36, 0.05)' }}>
-            <p style={{ fontSize: '16px', color: '#fbbf24', fontFamily: 'JetBrains Mono, monospace', margin: '0 0 8px 0' }}>
+          <div className="p-6 rounded-xl border border-primary/30 bg-primary/5 glass-panel">
+            <p className="text-base text-primary font-mono mb-2">
               No pipeline data yet
             </p>
-            <p style={{ fontSize: '14px', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', margin: '0 0 16px 0' }}>
-              Click the SYNC button in the navbar to run the pipeline and generate your first score.
+            <p className="text-sm text-muted-foreground font-mono mb-4">
+              Click the SYNC button in the navbar to run the pipeline and
+              generate your first score.
             </p>
-            <button onClick={() => mutate()} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #1e1e2e', backgroundColor: '#111118', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', fontSize: '14px', cursor: 'pointer' }}>
+            <button
+              onClick={() => mutate()}
+              className="px-4 py-2 rounded-md border border-border bg-card text-muted-foreground font-mono text-sm hover:bg-accent hover:text-foreground transition-all"
+            >
               Retry
             </button>
           </div>
@@ -38,140 +69,316 @@ export default function Dashboard() {
 
   if (isLoading && !score && !snapshot) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ width: '250px', height: '28px', backgroundColor: '#1e1e2e', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
-            <div style={{ marginTop: '8px', width: '200px', height: '16px', backgroundColor: '#1e1e2e', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+        <main className="max-w-7xl mx-auto px-4 py-8 w-full">
+          <div className="mb-6">
+            <div className="w-64 h-7 bg-muted rounded-md animate-pulse" />
+            <div className="mt-2 w-48 h-4 bg-muted rounded-md animate-pulse" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-            {[...Array(4)].map((_, i) => <ScoreCardSkeleton key={i} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <ScoreCardSkeleton key={i} />
+            ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <HeatmapSkeleton />
             <GapListSkeleton />
           </div>
         </main>
-        <style jsx global>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
       </div>
     );
   }
 
+  // Dynamically collect all role scores (handles any role the backend returns)
+  const roleScoreEntries = Object.entries(score?.role_scores || {});
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0f' }}>
-      <Navbar />
-      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '24px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: '#e2e8f0', margin: 0 }}>
-            DASHBOARD <span style={{ color: '#fbbf24' }}>::</span> OVERVIEW
-          </h1>
-          <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', marginTop: '8px', margin: 0 }}>
-            {snapshot?.github_data?.username ? `> ${snapshot.github_data.username} | ${new Date().toLocaleDateString()}` : '> READY'}
-          </p>
-        </div>
+    <div className="min-h-screen bg-background relative flex flex-col overflow-hidden">
+      {/* Background flair */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full pointer-events-none mix-blend-screen" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 blur-[120px] rounded-full pointer-events-none mix-blend-screen" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] pointer-events-none mix-blend-overlay" />
 
-        {snapshot && !snapshot.assessment?.overall_score && (
-          <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.3)', backgroundColor: 'rgba(251, 191, 36, 0.05)', color: '#fbbf24', fontFamily: 'JetBrains Mono, monospace', fontSize: '14px' }}>
-            <span style={{ marginRight: '8px' }}>⚠</span>No market data yet — add a RapidAPI key to enable job matching
+      <div className="z-10 flex-col flex w-full">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-8 w-full">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-mono font-bold text-foreground tracking-tight">
+              DASHBOARD <span className="text-primary">::</span> OVERVIEW
+            </h1>
+            <p className="text-sm font-mono text-muted-foreground mt-2 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              {snapshot?.github_data?.username
+                ? `${
+                    snapshot.github_data.username
+                  } | ${new Date().toLocaleDateString()}`
+                : "READY"}
+            </p>
           </div>
-        )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-          <ScoreCard title="Overall Score" score={score?.overall_score || 0} size="md" />
-          {score?.role_scores?.ml_engineer !== undefined && (
-            <ScoreCard title="ML ENGINEER" score={score.role_scores.ml_engineer} size="sm" />
-          )}
-          {score?.role_scores?.mlops !== undefined && (
-            <ScoreCard title="MLOPS" score={score.role_scores.mlops} size="sm" />
-          )}
-          {score?.role_scores?.devops !== undefined && (
-            <ScoreCard title="DEVOPS" score={score.role_scores.devops} size="sm" />
-          )}
-          {score?.role_scores?.backend !== undefined && (
-            <ScoreCard title="BACKEND" score={score.role_scores.backend} size="sm" />
-          )}
-        </div>
+          {snapshot &&
+            (!snapshot.assessment ||
+              typeof snapshot.assessment.overall_score !== "number") && (
+              <div className="mb-6 p-4 rounded-lg border border-primary/30 bg-primary/5 text-primary text-sm font-mono flex items-center gap-2">
+                <span className="text-lg">⚠</span> No market data yet — add a
+                RapidAPI key to enable job matching
+              </div>
+            )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', alignItems: 'start' }}>
-          <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px', minHeight: '200px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <svg style={{ height: '16px', width: '16px', color: '#fbbf24' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
-                <path d="M6 9v3a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V9"/><path d="M12 12V3"/>
-              </svg>
-              <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase', margin: 0 }}>GitHub Activity</h2>
-            </div>
-            {snapshot?.github_data ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px' }}>
-                {[
-                  { label: 'REPOS', value: snapshot.github_data.public_repos, color: '#e2e8f0' },
-                  { label: 'COMMITS (90D)', value: snapshot.github_data.contribution_stats.total_commits_last_90d, color: '#22c55e' },
-                  { label: 'STREAK', value: `${snapshot.github_data.contribution_stats.contribution_streak}d`, color: '#fbbf24' },
-                  { label: 'PRs', value: snapshot.github_data.contribution_stats.total_prs, color: '#e2e8f0' },
-                ].map((stat) => (
-                  <div key={stat.label} style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#0a0a0f', border: '1px solid #1e1e2e', textAlign: 'center' }}>
-                    <p style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', margin: '0 0 4px 0' }}>{stat.label}</p>
-                    <p style={{ fontSize: '18px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: stat.color, margin: 0 }}>{stat.value}</p>
+          {/* Score Cards — Overall + all dynamic role scores */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            <ScoreCard
+              title="Overall Score"
+              score={score?.overall_score ?? undefined}
+              size="md"
+              isSelected={selectedRole === "overall"}
+              onClick={() => setSelectedRole("overall")}
+            />
+            {Array.from(
+              new Set([
+                ...(settings?.target_roles || []).map((r) =>
+                  r.toLowerCase().replace(/ /g, "_"),
+                ),
+                ...Object.keys(score?.role_scores || {})
+                  .map((r) => r.toLowerCase().replace(/ /g, "_"))
+                  .filter((r) => r !== "overall"),
+              ]),
+            ).map((roleSlug) => {
+              // Try exact match then check if any key in score.role_scores matches this slug
+              const originalScoreKey = score?.role_scores
+                ? Object.keys(score.role_scores).find(
+                    (k) => k.toLowerCase().replace(/ /g, "_") === roleSlug,
+                  )
+                : null;
+              const roleScore = originalScoreKey
+                ? (score?.role_scores as any)[originalScoreKey]
+                : undefined;
+
+              return (
+                <ScoreCard
+                  key={roleSlug}
+                  title={roleSlug.replace(/_/g, " ").toUpperCase()}
+                  score={roleScore}
+                  size="sm"
+                  isSelected={selectedRole === roleSlug}
+                  onClick={() => setSelectedRole(roleSlug)}
+                />
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            {/* GitHub Activity Card — with Radar chart */}
+            <div className="glass-panel p-5 rounded-xl flex flex-col h-full relative overflow-hidden group">
+              <div className="absolute -right-6 -top-6 text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">
+                <Github size={120} />
+              </div>
+              <div className="flex items-center gap-2 mb-4 relative z-10">
+                <Github className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-mono font-semibold text-foreground uppercase tracking-wider">
+                  GitHub Activity
+                </h2>
+              </div>
+
+              {snapshot?.github_data ? (
+                <>
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 relative z-10 w-full mb-5">
+                    {[
+                      {
+                        label: "REPOS",
+                        value: snapshot.github_data.public_repos,
+                        color: "text-foreground",
+                      },
+                      {
+                        label: "COMMITS (90D)",
+                        value:
+                          snapshot.github_data.contribution_stats
+                            .total_commits_last_90d,
+                        color: "text-green-500",
+                      },
+                      {
+                        label: "STREAK",
+                        value: `${snapshot.github_data.contribution_stats.contribution_streak}d`,
+                        color: "text-primary",
+                      },
+                      {
+                        label: "PRs",
+                        value:
+                          snapshot.github_data.contribution_stats.total_prs,
+                        color: "text-foreground",
+                      },
+                    ].map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="p-3 rounded-lg bg-background/50 border border-border/50 text-center hover:bg-muted/50 transition-colors"
+                      >
+                        <p className="text-[10px] font-mono text-muted-foreground mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                          {stat.label}
+                        </p>
+                        <p
+                          className={`text-xl font-display font-bold ${stat.color}`}
+                        >
+                          {stat.value}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (<p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>No GitHub data available</p>)}
-          </div>
 
-          <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px', minHeight: '200px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <svg style={{ height: '16px', width: '16px', color: '#22c55e' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-              <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase', margin: 0 }}>Skill Market Trends</h2>
-            </div>
-            {skillTrends ? <SkillHeatmap data={skillTrends.trends} topSkills={skillTrends.top_trending} /> : <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>No trend data available</p>}
-          </div>
-
-          <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px', minHeight: '200px' }}>
-            <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase', margin: '0 0 16px 0' }}>Priority Skill Gaps</h2>
-            {gaps ? <GapList gaps={gaps.gaps.slice(0, 5)} /> : <p style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>No gaps identified</p>}
-          </div>
-
-          {snapshot?.assessment?.strengths && (
-            <div style={{ borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.2)', backgroundColor: 'rgba(34, 197, 94, 0.05)', padding: '16px', minHeight: '150px' }}>
-              <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#22c55e', textTransform: 'uppercase', margin: '0 0 12px 0' }}>Your Strengths</h2>
-              <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px', listStyle: 'none', padding: 0, margin: 0 }}>
-                {snapshot.assessment.strengths.map((strength, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '14px', color: '#cbd5e1' }}>
-                    <span style={{ color: '#22c55e', marginTop: '2px' }}>+</span><span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{strength}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {snapshot?.assessment?.top_matching_jobs && snapshot.assessment.top_matching_jobs.length > 0 && (
-            <div style={{ borderRadius: '8px', border: '1px solid #1e1e2e', backgroundColor: '#111118', padding: '16px', minHeight: '180px' }}>
-              <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#e2e8f0', textTransform: 'uppercase', margin: '0 0 12px 0' }}>Top Matches</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {snapshot.assessment.top_matching_jobs.slice(0, 3).map((job) => (
-                  <div key={job.job_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '6px', backgroundColor: '#0a0a0f', border: '1px solid #1e1e2e' }}>
-                    <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{job.job_id.slice(0, 12)}...</span>
-                    <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', padding: '2px 8px', borderRadius: '4px', backgroundColor: job.match_pct >= 80 ? 'rgba(34, 197, 94, 0.1)' : job.match_pct >= 60 ? 'rgba(251, 191, 36, 0.1)' : 'rgba(148, 163, 184, 0.1)', color: job.match_pct >= 80 ? '#22c55e' : job.match_pct >= 60 ? '#fbbf24' : '#94a3b8' }}>{job.match_pct}%</span>
+                  {/* Radar Coverage Chart */}
+                  <div className="relative z-10 border-t border-border/50 pt-4">
+                    <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">
+                      Coverage vs Market
+                    </p>
+                    <RadarCoverageChart
+                      snapshot={snapshot}
+                      skillTrends={skillTrends}
+                      overrideRole={selectedRole || undefined}
+                    />
                   </div>
-                ))}
-              </div>
+                </>
+              ) : (
+                <p className="text-sm font-mono text-muted-foreground relative z-10">
+                  No GitHub data available
+                </p>
+              )}
             </div>
-          )}
 
-          {snapshot?.assessment?.weekly_recommendation && (
-            <div style={{ borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.3)', backgroundColor: 'rgba(251, 191, 36, 0.05)', padding: '16px', minHeight: '120px', gridColumn: '1 / -1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <svg style={{ height: '16px', width: '16px', color: '#fbbf24' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
-                <h2 style={{ fontSize: '14px', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#fbbf24', textTransform: 'uppercase', margin: 0 }}>Weekly Recommendation</h2>
+            {/* Skill Market Trends */}
+            <div className="glass-panel p-5 rounded-xl flex flex-col h-full relative overflow-hidden group">
+              <div className="absolute -right-6 -bottom-6 text-secondary/5 group-hover:text-secondary/10 transition-colors pointer-events-none">
+                <TrendingUp size={120} />
               </div>
-              <p style={{ fontSize: '14px', color: '#cbd5e1', fontFamily: 'JetBrains Mono, monospace', margin: 0, lineHeight: '1.5' }}>{snapshot.assessment.weekly_recommendation}</p>
+              <div className="flex items-center gap-2 mb-4 relative z-10">
+                <TrendingUp className="h-4 w-4 text-secondary" />
+                <h2 className="text-sm font-mono font-semibold text-foreground uppercase tracking-wider">
+                  Skill Market Trends
+                </h2>
+              </div>
+              <div className="relative z-10 w-full overflow-hidden">
+                {skillTrends ? (
+                  <SkillHeatmap
+                    data={skillTrends.trends}
+                    topSkills={skillTrends.top_trending}
+                  />
+                ) : (
+                  <p className="text-sm font-mono text-muted-foreground">
+                    No trend data available
+                  </p>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </main>
+
+            {/* Priority Skill Gaps */}
+            <div className="glass-panel p-5 rounded-xl flex flex-col h-full relative overflow-hidden group">
+              <div className="absolute -left-6 -bottom-6 text-red-500/5 group-hover:text-red-500/10 transition-colors pointer-events-none">
+                <Target size={120} />
+              </div>
+              <div className="flex items-center gap-2 mb-4 relative z-10">
+                <Target className="h-4 w-4 text-red-500" />
+                <h2 className="text-sm font-mono font-semibold text-foreground uppercase tracking-wider">
+                  Priority Skill Gaps
+                </h2>
+              </div>
+              <div className="relative z-10 w-full overflow-hidden">
+                {gaps ? (
+                  <GapList gaps={gaps.gaps.slice(0, 5)} />
+                ) : (
+                  <p className="text-sm font-mono text-muted-foreground">
+                    No gaps identified
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Strengths */}
+            {snapshot?.assessment?.strengths && (
+              <div className="glass-panel p-5 rounded-xl border-green-500/20 bg-green-500/5 flex flex-col h-full relative overflow-hidden">
+                <div className="absolute right-0 top-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex items-center gap-2 mb-4 relative z-10">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <h2 className="text-sm font-mono font-semibold text-green-500 uppercase tracking-wider">
+                    Your Strengths
+                  </h2>
+                </div>
+                <ul className="flex flex-col gap-3 relative z-10 w-full">
+                  {snapshot.assessment.strengths.map((strength, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-sm text-muted-foreground group/item"
+                    >
+                      <Plus className="h-4 w-4 text-green-500 shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform" />
+                      <span className="font-mono group-hover/item:text-foreground transition-colors">
+                        {strength}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Top Matching Jobs */}
+            {snapshot?.assessment?.top_matching_jobs &&
+              snapshot.assessment.top_matching_jobs.length > 0 && (
+                <div className="glass-panel p-5 rounded-xl flex flex-col col-span-1 lg:col-span-2 relative overflow-hidden">
+                  <h2 className="text-sm font-mono font-semibold text-secondary uppercase mb-4 tracking-wider relative z-10">
+                    Top Matches
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                    {snapshot.assessment.top_matching_jobs
+                      .slice(0, 3)
+                      .map((job) => (
+                        <div
+                          key={job.job_id}
+                          className="flex flex-col gap-3 p-4 rounded-lg bg-background/50 border border-border/50 hover:border-secondary/30 hover:bg-secondary/5 transition-all cursor-pointer group hover:-translate-y-0.5"
+                        >
+                          <span className="text-sm font-display font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                            {job.job_id.slice(0, 20)}…
+                          </span>
+                          <div className="flex items-center justify-between mt-auto">
+                            <span className="text-xs font-mono text-muted-foreground">
+                              Match:
+                            </span>
+                            <span
+                              className={`text-xs font-mono px-2 py-1 rounded-md font-bold ${
+                                job.match_pct >= 80
+                                  ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                                  : job.match_pct >= 60
+                                    ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                    : "bg-muted text-muted-foreground border border-border"
+                              }`}
+                            >
+                              {job.match_pct}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+            {/* Weekly Recommendation */}
+            {snapshot?.assessment?.weekly_recommendation && (
+              <div className="glass-panel p-6 rounded-xl border border-primary/20 bg-primary/5 flex flex-col col-span-1 lg:col-span-2 relative overflow-hidden shadow-glow-primary">
+                <div className="absolute right-[-10%] top-[-10%] w-[50%] h-[150%] bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
+                <div className="flex items-center gap-2 mb-4 relative z-10">
+                  <div className="p-1.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                    <TrendingUp className="h-4 w-4" />
+                  </div>
+                  <h2 className="text-sm font-mono font-semibold text-primary uppercase tracking-wider">
+                    Weekly Recommendation
+                  </h2>
+                </div>
+                <p className="text-base text-foreground/90 font-mono leading-relaxed relative z-10 max-w-4xl">
+                  {snapshot.assessment.weekly_recommendation}
+                </p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

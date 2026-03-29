@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { SkillTrendData } from '@/lib/types';
+import { SkillTrendData } from "@/lib/types";
 
 interface SkillHeatmapProps {
   data: SkillTrendData[];
@@ -8,118 +8,130 @@ interface SkillHeatmapProps {
 }
 
 export default function SkillHeatmap({ data, topSkills }: SkillHeatmapProps) {
-  // Get unique skills and dates
-  const skills = Array.from(new Set(data.map(d => d.skill)));
-  const dates = Array.from(new Set(data.map(d => d.date))).sort().slice(-7); // Last 7 days
-  
-  // Create a map for quick lookup
-  const dataMap = new Map(data.map(d => [`${d.skill}-${d.date}`, d.frequency]));
-  
-  // Get max frequency for normalization
-  const maxFreq = Math.max(...data.map(d => d.frequency), 1);
-  
-  const getIntensityColor = (skill: string, date: string) => {
+  const skills = Array.from(new Set(data.map((d) => d.skill)));
+  const dates = Array.from(new Set(data.map((d) => d.date)))
+    .sort()
+    .slice(-7);
+
+  const dataMap = new Map(
+    data.map((d) => [`${d.skill}-${d.date}`, d.frequency]),
+  );
+  const maxFreq = Math.max(...data.map((d) => d.frequency), 1);
+
+  // Custom heatmap logic for tailwind classes instead of raw CSS
+  const getIntensityClass = (skill: string, date: string) => {
     const freq = dataMap.get(`${skill}-${date}`) || 0;
     const intensity = freq / maxFreq;
-    
-    // Color scale from dark to amber
-    if (intensity === 0) return '#0a0a0f';
-    if (intensity < 0.25) return 'rgba(251, 191, 36, 0.1)';
-    if (intensity < 0.5) return 'rgba(251, 191, 36, 0.25)';
-    if (intensity < 0.75) return 'rgba(251, 191, 36, 0.4)';
-    return 'rgba(251, 191, 36, 0.6)';
+
+    if (intensity === 0) return "bg-background";
+    if (intensity < 0.25) return "bg-secondary/20";
+    if (intensity < 0.5) return "bg-secondary/40";
+    if (intensity < 0.75) return "bg-secondary/60";
+    return "bg-secondary/90";
   };
-  
-  const getTextColor = (freq: number) => {
-    return freq / maxFreq > 0.5 ? '#0a0a0f' : '#94a3b8';
+
+  const getTextColor = (skill: string, date: string) => {
+    const freq = dataMap.get(`${skill}-${date}`) || 0;
+    return freq / maxFreq > 0.5 ? "text-black" : "text-muted-foreground";
   };
-  
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { weekday: 'short' });
+    return date.toLocaleDateString("en-US", { weekday: "short" });
   };
-  
-  // Sort skills by total frequency (most mentioned first)
-  const sortedSkills = skills.sort((a, b) => {
-    const aTotal = dates.reduce((sum, d) => sum + (dataMap.get(`${a}-${d}`) || 0), 0);
-    const bTotal = dates.reduce((sum, d) => sum + (dataMap.get(`${b}-${d}`) || 0), 0);
-    return bTotal - aTotal;
-  }).slice(0, 15); // Top 15 skills
+
+  const sortedSkills = skills
+    .sort((a, b) => {
+      const aTotal = dates.reduce(
+        (sum, d) => sum + (dataMap.get(`${a}-${d}`) || 0),
+        0,
+      );
+      const bTotal = dates.reduce(
+        (sum, d) => sum + (dataMap.get(`${b}-${d}`) || 0),
+        0,
+      );
+      return bTotal - aTotal;
+    })
+    .slice(0, 15);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Legend */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b' }}>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-3 text-xs font-mono text-muted-foreground">
         <span>RARE</span>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: '#0a0a0f', border: '1px solid #1e1e2e' }} />
-          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.1)' }} />
-          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.25)' }} />
-          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.4)' }} />
-          <div style={{ height: '12px', width: '12px', borderRadius: '2px', backgroundColor: 'rgba(251, 191, 36, 0.6)' }} />
+        <div className="flex gap-1">
+          <div className="h-3 w-3 rounded-sm bg-background border border-border" />
+          <div className="h-3 w-3 rounded-sm bg-secondary/20" />
+          <div className="h-3 w-3 rounded-sm bg-secondary/40" />
+          <div className="h-3 w-3 rounded-sm bg-secondary/60" />
+          <div className="h-3 w-3 rounded-sm bg-secondary/90" />
         </div>
         <span>COMMON</span>
       </div>
-      
-      {/* Heatmap Grid */}
-      <div style={{ overflowX: 'auto' }}>
-        <div style={{ minWidth: '400px' }}>
-          {/* Header row */}
-          <div style={{ display: 'grid', gridTemplateColumns: `120px repeat(${dates.length}, 1fr)` }}>
-            <div style={{ padding: '4px 8px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#475569', textTransform: 'uppercase' }}>Skill</div>
-            {dates.map(date => (
-              <div key={date} style={{ padding: '4px 8px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#64748b', textAlign: 'center' }}>
+
+      <div className="overflow-x-auto">
+        <div className="min-w-[400px]">
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: `120px repeat(${dates.length}, 1fr)`,
+            }}
+          >
+            <div className="py-1 px-2 text-xs font-mono text-muted-foreground uppercase">
+              Skill
+            </div>
+            {dates.map((date) => (
+              <div
+                key={date}
+                className="py-1 px-2 text-xs font-mono text-muted-foreground text-center"
+              >
                 {formatDate(date)}
               </div>
             ))}
           </div>
-          
-          {/* Skill rows */}
-          {sortedSkills.map(skill => (
-            <div 
+
+          {sortedSkills.map((skill) => (
+            <div
               key={skill}
-              style={{ 
-                display: 'grid', 
+              className="grid border-b border-border/50 items-center hover:bg-muted/10 transition-colors"
+              style={{
                 gridTemplateColumns: `120px repeat(${dates.length}, 1fr)`,
-                borderBottom: '1px solid #1e1e2e'
               }}
             >
-              <div style={{
-                padding: '6px 8px',
-                fontSize: '12px',
-                fontFamily: 'JetBrains Mono, monospace',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: topSkills?.includes(skill) ? '#fbbf24' : '#94a3b8',
-                fontWeight: topSkills?.includes(skill) ? 600 : 400
-              }}>
-                {topSkills?.includes(skill) && <span style={{ color: '#fbbf24' }}>★</span>}
+              <div
+                className={`py-1.5 px-2 text-xs font-mono truncate flex items-center gap-1 ${
+                  topSkills?.includes(skill)
+                    ? "text-secondary font-semibold"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {topSkills?.includes(skill) && (
+                  <span className="text-secondary">★</span>
+                )}
                 {skill}
               </div>
-              {dates.map(date => {
+              {dates.map((date) => {
                 const freq = dataMap.get(`${skill}-${date}`) || 0;
-                const bgColor = getIntensityColor(skill, date);
-                const textColor = getTextColor(freq);
                 return (
                   <div
                     key={`${skill}-${date}`}
-                    style={{
-                      margin: '2px',
-                      borderRadius: '2px',
-                      transition: 'all 0.2s',
-                      backgroundColor: bgColor,
-                      cursor: freq > 0 ? 'pointer' : 'default',
-                      border: freq > 0 ? '1px solid transparent' : 'none'
-                    }}
+                    className={`m-0.5 rounded-[2px] transition-all h-6 ${getIntensityClass(
+                      skill,
+                      date,
+                    )} ${
+                      freq > 0
+                        ? "cursor-pointer hover:ring-1 hover:ring-secondary/50 hover:z-10 relative"
+                        : "cursor-default"
+                    }`}
                     title={`${skill} on ${date}: ${freq} mentions`}
                   >
                     {freq > 0 && (
-                      <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono, monospace', color: textColor }}>
+                      <div className="h-full w-full flex items-center justify-center">
+                        <span
+                          className={`text-[10px] font-mono ${getTextColor(
+                            skill,
+                            date,
+                          )}`}
+                        >
                           {freq}
                         </span>
                       </div>

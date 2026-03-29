@@ -1,15 +1,21 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { usePipelineStatus, triggerSync } from '@/lib/swr-hooks';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { usePipelineStatus, triggerSync } from "@/lib/swr-hooks";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Loader2, RefreshCw, Radar } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
   const { status, mutate: mutateStatus } = usePipelineStatus();
+  const isDemoMode = status?.public_demo_mode || false;
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   useEffect(() => {
     if (toast) {
@@ -19,153 +25,155 @@ export default function Navbar() {
   }, [toast]);
 
   async function handleRefresh() {
-    if (isRefreshing) return;
+    if (isRefreshing || isDemoMode) return;
     setIsRefreshing(true);
     try {
       await triggerSync(true);
-      setToast({ message: 'Pipeline started — data will update in ~60s', type: 'success' });
+      setToast({
+        message: "Pipeline started — data will update in ~60s",
+        type: "success",
+      });
       mutateStatus();
     } catch (err) {
-      setToast({ message: 'Sync failed', type: 'error' });
+      setToast({ message: "Sync failed", type: "error" });
     } finally {
       setIsRefreshing(false);
     }
   }
 
   const navItems = [
-    { href: '/', label: 'DASHBOARD' },
-    { href: '/trends', label: 'TRENDS' },
-    { href: '/jobs', label: 'JOBS' },
-    { href: '/applications', label: 'APPLICATIONS' },
-    { href: '/cv', label: 'CV' },
-    { href: '/gaps', label: 'GAPS' },
-    { href: '/settings', label: 'SETTINGS' },
+    { href: "/", label: "DASHBOARD" },
+    { href: "/trends", label: "TRENDS" },
+    { href: "/jobs", label: "JOBS" },
+    { href: "/applications", label: "APPLICATIONS" },
+    { href: "/cv", label: "CV" },
+    { href: "/gaps", label: "GAPS" },
+    { href: "/settings", label: "SETTINGS" },
   ];
 
-  const amberColor = '#fbbf24';
-  const terminalBg = '#0a0a0f';
-  const terminalBorder = '#1e1e2e';
-  const slate400 = '#94a3b8';
-  const slate500 = '#64748b';
-  const green400 = '#22c55e';
+  const lastUpdated = (() => {
+    if (!status?.latest_snapshot_date) return "---";
+    const d = new Date(status.latest_snapshot_date);
+    const dateStr = d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    });
+    const timeStr = (status as any).latest_snapshot_time as string | undefined;
 
-  const lastUpdated = status?.latest_snapshot_date 
-    ? new Date(status.latest_snapshot_date).toLocaleDateString() 
-    : '---';
+    // Check if the time string looks like an ISO string or just HH:MM
+    if (timeStr && timeStr.includes("T")) {
+      const timeDate = new Date(timeStr);
+      const localTime = timeDate.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return `${dateStr} · ${localTime}`;
+    }
+
+    return timeStr ? `${dateStr} · ${timeStr}` : dateStr;
+  })();
 
   return (
     <>
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${terminalBorder}`, backgroundColor: `${terminalBg}f2`, backdropFilter: 'blur(4px)' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ display: 'flex', height: '56px', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-              <svg style={{ height: '24px', width: '24px', color: amberColor }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-              </svg>
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '18px', fontWeight: 600, color: amberColor, letterSpacing: '-0.025em' }}>
-                CareerRadar
-              </span>
-            </Link>
+      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-2 group">
+                <Radar className="h-6 w-6 text-primary group-hover:animate-pulse" />
+                <span className="font-display text-lg font-bold text-foreground tracking-tight">
+                  CareerRadar
+                </span>
+              </Link>
+              {isDemoMode && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-tighter">
+                  Read Only
+                </span>
+              )}
+            </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="flex items-center gap-1 hidden md:flex">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      textDecoration: 'none',
-                      transition: 'all 0.2s',
-                      border: isActive ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid transparent',
-                      backgroundColor: isActive ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
-                      color: isActive ? amberColor : slate400
-                    }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-primary/10 text-primary border border-primary/20"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border border-transparent"
+                    }`}
                   >
                     {item.label}
-                    {isActive && <span style={{ marginLeft: '4px', height: '6px', width: '6px', borderRadius: '50%', backgroundColor: amberColor }} />}
+                    {isActive && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-glow-primary" />
+                    )}
                   </Link>
                 );
               })}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
-                <span style={{ color: slate500 }}>LAST SYNC:</span>
-                <span style={{ color: status?.today_ran ? green400 : amberColor }}>{lastUpdated}</span>
-                <span style={{ height: '8px', width: '8px', borderRadius: '50%', backgroundColor: status?.today_ran ? green400 : amberColor }} />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-xs font-medium font-mono hidden sm:flex">
+                <span className="text-muted-foreground">LAST SYNC:</span>
+                <span
+                  className={
+                    status?.today_ran ? "text-green-500" : "text-primary"
+                  }
+                >
+                  {lastUpdated}
+                </span>
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    status?.today_ran
+                      ? "bg-green-500"
+                      : "bg-primary shadow-glow-primary"
+                  }`}
+                />
               </div>
               <button
                 onClick={handleRefresh}
-                disabled={isRefreshing}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  border: `1px solid ${terminalBorder}`,
-                  backgroundColor: '#111118',
-                  color: slate400,
-                  fontSize: '12px',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                  opacity: isRefreshing ? 0.5 : 1,
-                  transition: 'all 0.2s'
-                }}
+                disabled={isRefreshing || isDemoMode}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground font-mono text-xs font-medium transition-all ${
+                  isRefreshing || isDemoMode
+                    ? "cursor-not-allowed opacity-50"
+                    : "hover:bg-accent hover:text-foreground"
+                }`}
+                title={
+                  isDemoMode
+                    ? "Sync disabled in demo mode"
+                    : "Trigger pipeline sync"
+                }
               >
                 {isRefreshing ? (
-                  <svg style={{ height: '16px', width: '16px', animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-                  </svg>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg style={{ height: '16px', width: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M21 12v9m0-9h-9"/>
-                  </svg>
+                  <RefreshCw className="h-4 w-4" />
                 )}
-                <span>{isRefreshing ? 'SYNCING...' : 'SYNC'}</span>
+                <span>{isRefreshing ? "SYNCING..." : "SYNC"}</span>
               </button>
+
+              <div className="w-px h-6 bg-border mx-1"></div>
+
+              <ThemeToggle />
             </div>
           </div>
         </div>
       </nav>
 
       {toast && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 100,
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontSize: '14px',
-          fontFamily: 'JetBrains Mono, monospace',
-          backgroundColor: toast.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-          border: `1px solid ${toast.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-          color: toast.type === 'success' ? '#22c55e' : '#ef4444',
-          animation: 'slideIn 0.3s ease-out'
-        }}>
-          {toast.type === 'success' ? '✓ ' : '✗ '}{toast.message}
+        <div
+          className={`fixed bottom-6 right-6 z-[100] px-6 py-3 rounded-lg text-sm font-medium shadow-lg transition-transform duration-300 transform translate-y-0 ${
+            toast.type === "success"
+              ? "bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400"
+              : "bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400"
+          }`}
+        >
+          {toast.type === "success" ? "✓ " : "✗ "}
+          {toast.message}
         </div>
       )}
-
-      <style jsx global>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-      `}</style>
     </>
   );
 }

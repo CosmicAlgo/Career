@@ -48,7 +48,7 @@ export interface JobMatch {
 export interface SkillGap {
   skill: string;
   frequency_in_market: number;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 export interface AssessmentResult {
@@ -134,8 +134,10 @@ export interface RefreshResponse {
 export interface PipelineStatus {
   today_ran: boolean;
   latest_snapshot_date: string | null;
+  latest_snapshot_time?: string | null;
   total_snapshots: number;
   jobs_today: number;
+  public_demo_mode: boolean;
 }
 
 export interface HealthResponse {
@@ -160,7 +162,14 @@ export interface JobApplication {
   company: string;
   source_url?: string;
   source: string;
-  status: 'interested' | 'applied' | 'phone_screen' | 'technical' | 'final' | 'offer' | 'rejected';
+  status:
+    | "interested"
+    | "applied"
+    | "phone_screen"
+    | "technical"
+    | "final"
+    | "offer"
+    | "rejected";
   date_applied?: string;
   notes?: string;
   salary_range?: string;

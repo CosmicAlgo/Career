@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Core Features
+
 - **Dashboard with real-time scoring** — Overall profile score plus per-role breakdowns (ML Engineer, MLOps, DevOps, Backend, Data Engineer, Platform Engineer)
 - **Skill gap analysis** — Identifies missing skills ranked by market frequency
 - **Job matching** — Top 10 best-matching jobs with match percentage and reasoning
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Weekly recommendations** — AI-generated action items based on current gaps
 
 #### Data Pipeline
+
 - **Daily automated pipeline** — Runs at 06:00 UTC via APScheduler
 - **Tiered job scraping** — JSearch RapidAPI (Tier 1) → Apify (Tier 2) → Direct scrapers (Tier 3)
 - **GitHub profile ingestion** — GraphQL API v4 for repos, languages, commits, PRs, streaks
@@ -27,11 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **15 realistic mock jobs** — Fallback when no API keys available (DeepMind, Google, Amazon, Spotify, Netflix, Meta, Revolut, Monzo, OpenAI, Anthropic, Stability AI, JPMorgan, Goldman Sachs, Palantir, Databricks)
 
 #### User Configuration
+
 - **Settings page** — Configure target roles, locations, seniority, GitHub username
 - **user_settings Supabase table** — Persistent configuration with env fallback
 - **Multi-target support** — Multiple roles and locations per user
 
 #### Frontend
+
 - **Bloomberg Terminal aesthetic** — Dense, monospace, dark theme with CSS variables
 - **SWR data fetching** — Caching, revalidation, optimistic updates
 - **Skeleton loading states** — Score cards, job cards, charts, heatmaps, gap lists
@@ -41,17 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tab navigation** — Dashboard, Trends, Jobs, Gaps, Settings
 
 #### API & Backend
+
 - **FastAPI REST API** — Full CRUD for snapshots, jobs, scores, gaps
 - **GET/POST /api/settings** — User configuration endpoints
 - **Pydantic v2 models** — Strict type validation throughout
 - **Automatic revalidation** — SWR mutate triggers cascade refetch
 
 #### DevOps & CI/CD
+
 - **GitHub Actions CI** — Python syntax checks, import validation, Next.js build
 - **Security workflows** — Gitleaks secrets scan, pip-audit, npm audit
 - **PR automation** — Security summary comments on pull requests
 
 #### Documentation
+
 - **Comprehensive README** — Features, stack, quickstart, deployment
 - **SELF_HOSTING.md** — Step-by-step self-hosting guide
 - **CONTRIBUTING.md** — Development setup, branch naming, commit style
@@ -85,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0] - 2026-03-20
 
 ### Added
+
 - Initial project scaffold
 - Basic FastAPI backend structure
 - Next.js 14 frontend with App Router
@@ -94,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic assessment pipeline
 
 ### Known Issues
+
 - Tailwind custom colors not rendering
 - useEffect causing stale data on tab navigation
 - Empty jobs tab when no API key configured
@@ -104,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Roadmap
 
 ### [1.1.0] - Planned
+
 - [ ] Email digest with SendGrid/Resend
 - [ ] CV/resume PDF upload and matching
 - [ ] Multi-user support with Supabase Auth
@@ -111,12 +121,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Interview tracker
 
 ### [1.2.0] - Planned
+
 - [ ] Salary benchmarking by role/location
 - [ ] More job sources (Otta, Cord, Hired)
 - [ ] Battle-test Glassdoor/Otta scrapers
 - [ ] pytest test suite
 
 ### [2.0.0] - Future
+
 - [ ] ML-based skill extraction from descriptions
 - [ ] Company culture matching
 - [ ] Interview question preparation based on gaps

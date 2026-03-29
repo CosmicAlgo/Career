@@ -21,21 +21,24 @@ import {
   ApplicationsResponse,
   ApplicationStatsResponse,
   FollowUpResponse,
-} from './types';
+} from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchApi<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
-  
+
   // Add 8-second timeout to prevent hanging forever
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
-  
+
   try {
     const response = await fetch(url, {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       signal: controller.signal,
       ...options,
@@ -51,7 +54,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     return response.json();
   } catch (err: any) {
     clearTimeout(timeoutId);
-    if (err.name === 'AbortError') {
+    if (err.name === "AbortError") {
       console.error(`[API] ${endpoint} → TIMEOUT (8s)`);
       throw new Error(`Request timeout: ${endpoint}`);
     }
@@ -62,111 +65,146 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 
 // Health check
 export async function getHealth(): Promise<HealthResponse> {
-  return fetchApi<HealthResponse>('/health');
+  return fetchApi<HealthResponse>("/health");
 }
 
 // Scores
 export async function getCurrentScore(): Promise<ScoreResponse> {
-  return fetchApi<ScoreResponse>('/api/score');
+  return fetchApi<ScoreResponse>("/api/score");
 }
 
 export async function getScoreTrends(days?: number): Promise<TrendsResponse> {
-  const params = days ? `?days=${days}` : '';
+  const params = days ? `?days=${days}` : "";
   return fetchApi<TrendsResponse>(`/api/score/trends${params}`);
 }
 
 // Jobs
-export async function getJobs(date?: string, limit?: number): Promise<JobsResponse> {
+export async function getJobs(
+  date?: string,
+  limit?: number,
+): Promise<JobsResponse> {
   const params = new URLSearchParams();
-  if (date) params.append('date', date);
-  if (limit) params.append('limit', limit.toString());
-  const query = params.toString() ? `?${params.toString()}` : '';
+  if (date) params.append("date", date);
+  if (limit) params.append("limit", limit.toString());
+  const query = params.toString() ? `?${params.toString()}` : "";
   return fetchApi<JobsResponse>(`/api/jobs${query}`);
 }
 
 export async function getLatestJobs(limit?: number): Promise<JobsResponse> {
-  const params = limit ? `?limit=${limit}` : '';
+  const params = limit ? `?limit=${limit}` : "";
   return fetchApi<JobsResponse>(`/api/jobs/latest${params}`);
 }
 
 // Snapshots
 export async function getLatestSnapshot(): Promise<SnapshotResponse> {
-  return fetchApi<SnapshotResponse>('/api/snapshot/latest');
+  return fetchApi<SnapshotResponse>("/api/snapshot/latest");
 }
 
-export async function getSnapshotByDate(date: string): Promise<SnapshotResponse> {
+export async function getSnapshotByDate(
+  date: string,
+): Promise<SnapshotResponse> {
   return fetchApi<SnapshotResponse>(`/api/snapshot/${date}`);
 }
 
-export async function getSnapshotHistory(days?: number): Promise<SnapshotResponse[]> {
-  const params = days ? `?days=${days}` : '';
+export async function getSnapshotHistory(
+  days?: number,
+): Promise<SnapshotResponse[]> {
+  const params = days ? `?days=${days}` : "";
   return fetchApi<SnapshotResponse[]>(`/api/snapshot${params}`);
 }
 
 // Gaps
 export async function getSkillGaps(): Promise<GapResponse> {
-  return fetchApi<GapResponse>('/api/gaps');
+  return fetchApi<GapResponse>("/api/gaps");
 }
 
 // Skill Trends
-export async function getSkillTrends(days?: number): Promise<SkillTrendsResponse> {
-  const params = days ? `?days=${days}` : '';
+export async function getSkillTrends(
+  days?: number,
+): Promise<SkillTrendsResponse> {
+  const params = days ? `?days=${days}` : "";
   return fetchApi<SkillTrendsResponse>(`/api/skills/trends${params}`);
 }
 
 // Refresh / Pipeline
-export async function triggerRefresh(force?: boolean): Promise<RefreshResponse> {
-  return fetchApi<RefreshResponse>('/api/score/refresh', {
-    method: 'POST',
+export async function triggerRefresh(
+  force?: boolean,
+): Promise<RefreshResponse> {
+  return fetchApi<RefreshResponse>("/api/score/refresh", {
+    method: "POST",
     body: JSON.stringify({ force: force || false }),
   });
 }
 
 export async function getPipelineStatus(): Promise<PipelineStatus> {
-  return fetchApi<PipelineStatus>('/api/status');
+  return fetchApi<PipelineStatus>("/api/status");
 }
 
 // Settings
 export async function getSettings(): Promise<SettingsResponse> {
-  return fetchApi<SettingsResponse>('/api/settings');
+  return fetchApi<SettingsResponse>("/api/settings");
 }
 
-export async function updateSettings(settings: Partial<SettingsResponse>): Promise<SettingsResponse> {
-  return fetchApi<SettingsResponse>('/api/settings', {
-    method: 'POST',
+export async function updateSettings(
+  settings: Partial<SettingsResponse>,
+): Promise<SettingsResponse> {
+  return fetchApi<SettingsResponse>("/api/settings", {
+    method: "POST",
     body: JSON.stringify(settings),
   });
 }
 
 // Application Tracker
-export async function createApplication(application: CreateApplicationRequest): Promise<ApplicationResponse> {
-  return fetchApi<ApplicationResponse>('/api/applications', {
-    method: 'POST',
+export async function createApplication(
+  application: CreateApplicationRequest,
+): Promise<ApplicationResponse> {
+  return fetchApi<ApplicationResponse>("/api/applications", {
+    method: "POST",
     body: JSON.stringify(application),
   });
 }
 
 export async function getApplications(): Promise<ApplicationsResponse> {
-  return fetchApi<ApplicationsResponse>('/api/applications');
+  return fetchApi<ApplicationsResponse>("/api/applications");
 }
 
-export async function updateApplication(applicationId: string, update: UpdateApplicationRequest): Promise<ApplicationResponse> {
+export async function updateApplication(
+  applicationId: string,
+  update: UpdateApplicationRequest,
+): Promise<ApplicationResponse> {
   return fetchApi<ApplicationResponse>(`/api/applications/${applicationId}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(update),
   });
 }
 
-export async function getApplicationsByStatus(status: string): Promise<ApplicationsResponse> {
+export async function deleteApplication(
+  applicationId: string,
+): Promise<{ success: boolean; message: string }> {
+  return fetchApi<{ success: boolean; message: string }>(
+    `/api/applications/${applicationId}`,
+    {
+      method: "DELETE",
+    },
+  );
+}
+
+export async function getApplicationsByStatus(
+  status: string,
+): Promise<ApplicationsResponse> {
   return fetchApi<ApplicationsResponse>(`/api/applications/status/${status}`);
 }
 
-export async function getApplicationStats(days?: number): Promise<ApplicationStatsResponse> {
-  const params = days ? `?days=${days}` : '';
+export async function getApplicationStats(
+  days?: number,
+): Promise<ApplicationStatsResponse> {
+  const params = days ? `?days=${days}` : "";
   return fetchApi<ApplicationStatsResponse>(`/api/applications/stats${params}`);
 }
 
-export async function getFollowUps(daysAhead?: number): Promise<FollowUpResponse> {
-  const params = daysAhead ? `?days_ahead=${daysAhead}` : '';
+export async function getFollowUps(
+  daysAhead?: number,
+): Promise<FollowUpResponse> {
+  const params = daysAhead ? `?days_ahead=${daysAhead}` : "";
   return fetchApi<FollowUpResponse>(`/api/applications/follow-ups${params}`);
 }

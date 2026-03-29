@@ -45,3 +45,5 @@ logs/
 # Quota tracker state file (contains usage data, regenerates automatically)
 backend/scrapers/quota_state.json
 docs/*.md
+repomix-output.xml
+code_digest.md

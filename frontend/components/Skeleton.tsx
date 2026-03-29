@@ -1,12 +1,4 @@
-'use client';
-
-/**
- * Skeleton Loading Components
- * Bloomberg terminal style loading placeholders
- */
-
-const skeletonBg = '#1e1e2e';
-const shimmer = 'rgba(251, 191, 36, 0.1)';
+"use client";
 
 interface SkeletonProps {
   width?: string;
@@ -14,36 +6,27 @@ interface SkeletonProps {
   className?: string;
 }
 
-export function Skeleton({ width = '100%', height = '20px' }: SkeletonProps) {
+export function Skeleton({
+  width = "100%",
+  height = "20px",
+  className = "",
+}: SkeletonProps) {
   return (
     <div
-      style={{
-        width,
-        height,
-        backgroundColor: skeletonBg,
-        borderRadius: '4px',
-        animation: 'shimmer 1.5s infinite',
-      }}
+      style={{ width, height }}
+      className={`bg-muted rounded-md animate-pulse ${className}`}
     />
   );
 }
 
 export function ScoreCardSkeleton() {
   return (
-    <div
-      style={{
-        padding: '16px',
-        borderRadius: '8px',
-        border: '1px solid #1e1e2e',
-        backgroundColor: '#111118',
-        minHeight: '120px',
-      }}
-    >
+    <div className="p-4 rounded-xl border border-border bg-card min-h-[120px]">
       <Skeleton width="60%" height="14px" />
-      <div style={{ marginTop: '16px' }}>
+      <div className="mt-4">
         <Skeleton width="40%" height="32px" />
       </div>
-      <div style={{ marginTop: '12px' }}>
+      <div className="mt-3">
         <Skeleton width="80%" height="12px" />
       </div>
     </div>
@@ -52,28 +35,20 @@ export function ScoreCardSkeleton() {
 
 export function JobCardSkeleton() {
   return (
-    <div
-      style={{
-        padding: '16px',
-        borderRadius: '8px',
-        border: '1px solid #1e1e2e',
-        backgroundColor: '#111118',
-        minHeight: '160px',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div className="glass-panel p-4 rounded-xl min-h-[160px]">
+      <div className="flex justify-between items-start">
         <Skeleton width="70%" height="18px" />
         <Skeleton width="60px" height="20px" />
       </div>
-      <div style={{ marginTop: '8px' }}>
+      <div className="mt-2">
         <Skeleton width="40%" height="14px" />
       </div>
-      <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+      <div className="mt-3 flex gap-2 flex-wrap">
         <Skeleton width="60px" height="20px" />
         <Skeleton width="80px" height="20px" />
         <Skeleton width="50px" height="20px" />
       </div>
-      <div style={{ marginTop: '12px' }}>
+      <div className="mt-4">
         <Skeleton width="100%" height="40px" />
       </div>
     </div>
@@ -82,21 +57,15 @@ export function JobCardSkeleton() {
 
 export function ChartSkeleton() {
   return (
-    <div
-      style={{
-        padding: '16px',
-        borderRadius: '8px',
-        border: '1px solid #1e1e2e',
-        backgroundColor: '#111118',
-        height: '300px',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div className="glass-panel p-4 rounded-xl h-[300px] flex flex-col">
       <Skeleton width="30%" height="16px" />
-      <div style={{ flex: 1, marginTop: '16px', display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+      <div className="flex-1 mt-4 flex items-end gap-2">
         {[...Array(7)].map((_, i) => (
-          <Skeleton key={i} width={`${Math.random() * 40 + 20}%`} height={`${Math.random() * 60 + 20}%`} />
+          <Skeleton
+            key={i}
+            width={`${Math.random() * 40 + 20}%`}
+            height={`${Math.random() * 60 + 20}%`}
+          />
         ))}
       </div>
     </div>
@@ -105,26 +74,14 @@ export function ChartSkeleton() {
 
 export function HeatmapSkeleton() {
   return (
-    <div
-      style={{
-        padding: '16px',
-        borderRadius: '8px',
-        border: '1px solid #1e1e2e',
-        backgroundColor: '#111118',
-      }}
-    >
+    <div className="glass-panel p-4 rounded-xl">
       <Skeleton width="40%" height="16px" />
-      <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+      <div className="mt-4 grid grid-cols-7 gap-1">
         {[...Array(28)].map((_, i) => (
           <div
             key={i}
-            style={{
-              aspectRatio: '1',
-              borderRadius: '4px',
-              backgroundColor: skeletonBg,
-              animation: 'shimmer 1.5s infinite',
-              animationDelay: `${i * 0.05}s`,
-            }}
+            className="aspect-square rounded bg-muted animate-pulse"
+            style={{ animationDelay: `${i * 0.05}s` }}
           />
         ))}
       </div>
@@ -134,21 +91,14 @@ export function HeatmapSkeleton() {
 
 export function GapListSkeleton() {
   return (
-    <div
-      style={{
-        padding: '16px',
-        borderRadius: '8px',
-        border: '1px solid #1e1e2e',
-        backgroundColor: '#111118',
-      }}
-    >
+    <div className="glass-panel p-4 rounded-xl">
       <Skeleton width="50%" height="16px" />
-      <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="mt-4 flex flex-col gap-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div key={i} className="flex items-center gap-3">
             <Skeleton width="30%" height="14px" />
             <Skeleton width="40px" height="14px" />
-            <div style={{ flex: 1 }}>
+            <div className="flex-1">
               <Skeleton width="100%" height="8px" />
             </div>
           </div>
@@ -160,31 +110,21 @@ export function GapListSkeleton() {
 
 export function DashboardSkeleton() {
   return (
-    <div style={{ padding: '24px', maxWidth: '1280px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
         <Skeleton width="200px" height="24px" />
-        <div style={{ marginTop: '8px' }}>
+        <div className="mt-2">
           <Skeleton width="300px" height="14px" />
         </div>
       </div>
 
-      {/* Score Cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[...Array(4)].map((_, i) => (
           <ScoreCardSkeleton key={i} />
         ))}
       </div>
 
-      {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartSkeleton />
         <HeatmapSkeleton />
         <GapListSkeleton />
@@ -193,33 +133,20 @@ export function DashboardSkeleton() {
   );
 }
 
-export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function ErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) {
   return (
-    <div
-      style={{
-        padding: '24px',
-        borderRadius: '8px',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
-        backgroundColor: 'rgba(239, 68, 68, 0.05)',
-        textAlign: 'center',
-      }}
-    >
-      <p style={{ color: '#ef4444', fontFamily: 'JetBrains Mono, monospace', fontSize: '14px', marginBottom: '16px' }}>
-        ✗ {message}
-      </p>
+    <div className="p-6 rounded-lg border border-destructive/30 bg-destructive/5 text-center">
+      <p className="text-destructive font-mono text-sm mb-4">✗ {message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            backgroundColor: 'transparent',
-            color: '#ef4444',
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: '12px',
-            cursor: 'pointer',
-          }}
+          className="px-4 py-2 rounded-md border border-destructive/30 bg-transparent text-destructive font-mono text-xs cursor-pointer hover:bg-destructive/10 transition-colors"
         >
           RETRY
         </button>

@@ -3,13 +3,13 @@ CV Processing API Schemas
 Pydantic models for CV upload and analysis
 """
 
-from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class CVUploadResponse(BaseModel):
     """Response after CV upload and processing."""
+
     success: bool
     message: str
     cv_data: Optional[Dict[str, Any]] = None
@@ -18,6 +18,7 @@ class CVUploadResponse(BaseModel):
 
 class CVAnalysis(BaseModel):
     """CV analysis results."""
+
     cv_score: Dict[str, Any]
     skill_analysis: Dict[str, Any]
     github_comparison: Dict[str, Any]
@@ -29,11 +30,13 @@ class CVAnalysis(BaseModel):
 
 class CVAnalysisRequest(BaseModel):
     """Request for CV analysis."""
+
     target_roles: List[str] = []
 
 
 class CVListResponse(BaseModel):
     """Response listing processed CVs."""
+
     cvs: List[Dict[str, Any]]
     total: int
     success: bool
@@ -41,5 +44,6 @@ class CVListResponse(BaseModel):
 
 class CVDeleteResponse(BaseModel):
     """Response after CV deletion."""
+
     success: bool
     message: str

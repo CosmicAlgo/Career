@@ -1,22 +1,24 @@
 /** @type {import('next').NextConfig} */
+const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
+
 const nextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*',
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
       },
       {
-        source: '/health',
-        destination: 'http://localhost:8000/health',
+        source: "/health",
+        destination: `${backendUrl}/health`,
       },
     ];
   },
-}
+};
 
-module.exports = nextConfig
-
+module.exports = nextConfig;
 
 // Injected content via Sentry wizard below
 
