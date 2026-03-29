@@ -88,6 +88,16 @@ def infer_job_role(job: NormalisedJob, target_roles: List[str]) -> Optional[str]
         "data_scientist": ["data scientist", "data science"],
         "sre": ["sre", "site reliability engineer"],
         "platform": ["platform engineer"],
+        "hpc_engineer": [
+            "hpc",
+            "high performance computing",
+            "parallel computing",
+            "mpi",
+            "cuda",
+            "openmp",
+            "supercomputing",
+            "distributed systems",
+        ],
     }
 
     # Find best matching role
@@ -151,28 +161,30 @@ def aggregate_role_scores(
         else:
             role_scores[role] = 0
 
-    # Ensure all target roles have a score (default 0 if no jobs found to prevent inflating averages)
+    # Ensure all target roles have a score (omit if no jobs found to prevent inflating averages/showing 0)
     for role in target_roles:
         role_lower = role.lower().strip()
         if role_lower not in role_scores:
-            role_scores[role_lower] = 0
+            # We explicitly OMIT the role from the collection if no market data is found
+            # This allows the frontend to show a "Gap/No Data" state instead of a failing 0.
+            pass
 
     # Compute overall score smartly:
     # A user shouldn't be heavily penalized if 5 secondary roles don't match or lack data.
     # Therefore, we heavily weight their primary (best) matched role against the others.
     valid_scores = [score for role, score in role_scores.items() if score > 0]
-    
+
     if valid_scores:
         valid_scores.sort(reverse=True)
         top_score = valid_scores[0]
-        
+
         # 70% weight on best match, 30% averaged across other matched roles
         if len(valid_scores) > 1:
             rest_avg = sum(valid_scores[1:]) / len(valid_scores[1:])
             overall = (top_score * 0.70) + (rest_avg * 0.30)
         else:
             overall = top_score
-            
+
         role_scores["overall"] = int(overall)
     else:
         role_scores["overall"] = 0

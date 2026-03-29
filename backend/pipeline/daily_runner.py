@@ -40,6 +40,7 @@ ROLE_SLUG_MAP = {
     "data_scientist": "Data Scientist",
     "sre": "Site Reliability Engineer",
     "platform": "Platform Engineer",
+    "hpc_engineer": "HPC Engineer",
 }
 
 

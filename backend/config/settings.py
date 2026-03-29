@@ -73,6 +73,9 @@ class Settings(BaseSettings):
     environment: str = Field(
         default="development", description="Environment: development/production"
     )
+    public_demo_mode: bool = Field(
+        default=False, description="Whether the app is in public demo mode (read-only)"
+    )
 
     @field_validator(
         "target_roles", "target_locations", "target_seniority", mode="before"

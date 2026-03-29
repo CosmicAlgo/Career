@@ -134,8 +134,10 @@ export interface RefreshResponse {
 export interface PipelineStatus {
   today_ran: boolean;
   latest_snapshot_date: string | null;
+  latest_snapshot_time?: string | null;
   total_snapshots: number;
   jobs_today: number;
+  public_demo_mode: boolean;
 }
 
 export interface HealthResponse {

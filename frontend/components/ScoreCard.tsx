@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 
 interface ScoreCardProps {
   title: string;
-  score: number;
+  score?: number;
   previousScore?: number;
   subtitle?: string;
   size?: "sm" | "md" | "lg";
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 export default function ScoreCard({
@@ -16,10 +18,21 @@ export default function ScoreCard({
   previousScore,
   subtitle,
   size = "md",
+  onClick,
+  isSelected = false,
 }: ScoreCardProps) {
-  const [displayScore, setDisplayScore] = useState(0);
+  const [displayScore, setDisplayScore] = useState(offsetScore(score));
+
+  function offsetScore(s?: number) {
+    return s === undefined || s === null ? 0 : 0; // Just for initial state
+  }
 
   useEffect(() => {
+    if (score === undefined || score === null) {
+      setDisplayScore(0);
+      return;
+    }
+
     const duration = 1000;
     const steps = 30;
     const increment = score / steps;
@@ -66,14 +79,28 @@ export default function ScoreCard({
     return "bg-red-500";
   };
 
-  const scoreColor = getScoreVariant(score);
-  const borderColor = getBorderColor(score);
-  const glowShadow = getGlowShadow(score);
-  const barColor = getBgColor(score);
+  const hasData = score !== undefined && score !== null;
+  const safeScore = score ?? 0;
+
+  const scoreColor = hasData
+    ? getScoreVariant(safeScore)
+    : "text-muted-foreground";
+  const borderColor = isSelected
+    ? "border-primary ring-2 ring-primary/20 shadow-lg"
+    : hasData
+      ? getBorderColor(safeScore)
+      : "border-muted";
+  const glowShadow = hasData ? getGlowShadow(safeScore) : "";
+  const barColor = hasData ? getBgColor(safeScore) : "bg-muted-foreground/30";
 
   return (
     <div
-      className={`relative overflow-hidden rounded-lg border ${borderColor} bg-card ${paddingClass} ${glowShadow} transition-all duration-300 hover:-translate-y-1`}
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-lg border bg-card ${paddingClass} ${glowShadow} transition-all duration-300 ${
+        onClick ? "cursor-pointer" : ""
+      } ${
+        isSelected ? "scale-[1.02] -translate-y-1" : "hover:-translate-y-1"
+      } ${borderColor}`}
     >
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background pointer-events-none" />
 
@@ -100,10 +127,15 @@ export default function ScoreCard({
           )}
         </div>
 
-        {/* Score */}
         <div className={`font-mono font-bold ${scoreSizeClass} ${scoreColor}`}>
-          {displayScore}
-          <span className="text-lg text-muted-foreground ml-1">/100</span>
+          {hasData ? (
+            <>
+              {displayScore}
+              <span className="text-lg text-muted-foreground ml-1">/100</span>
+            </>
+          ) : (
+            <span className="text-sm">No coverage data</span>
+          )}
         </div>
 
         {/* Subtitle */}
@@ -117,7 +149,7 @@ export default function ScoreCard({
         <div className="mt-3 h-1 w-full bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full ${barColor} transition-all duration-1000 ease-out`}
-            style={{ width: `${score}%` }}
+            style={{ width: `${safeScore}%` }}
           />
         </div>
       </div>

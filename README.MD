@@ -2,172 +2,121 @@
 
 > Daily career intelligence dashboard — know exactly where you stand in today's job market.
 
-CareerRadar pulls your GitHub profile, scrapes real job postings every morning, and uses Gemini Flash to score your profile against the market. Every day you get a match score, a skill gap report, and the top jobs you actually qualify for. Built by a job hunter, for job hunters.
+CareerRadar analyzes your GitHub profile, scrapes real-time job postings every morning, and uses Gemini Flash to score your profile against the market. Every day you get a **weighted match score**, a **radar coverage chart**, and a list of jobs you actually qualify for.
 
 ![Dashboard Preview](docs/preview.png)
 
 ---
 
-## The Problem
+## 🚀 The Core Innovation: Evidence-Based Assessment
 
-Job hunting is blind. You apply, hear nothing, and have no idea whether your profile matches what the market actually wants today — not six months ago, not in general, but _today_.
+Most career tools use static keywords. CareerRadar uses a **Weighted Semantic Engine**:
 
-CareerRadar fixes that by running a daily analysis loop:
-
-1. Reads your GitHub activity, languages, repos, and commit history via GraphQL
-2. Scrapes fresh job postings from Simplify, Glassdoor, Otta, and Zing
-3. Sends both to Gemini Flash 2.5 for intelligent matching
-4. Shows you a score, your gaps, and your best-matching jobs on a dashboard
-
-Check it every morning. Watch your score move as you build.
+1.  **GitHub Ingestion:** Reads your actual code complexity, repository topics, and commit patterns via GraphQL.
+2.  **Market Pulse:** Scrapes fresh distributions of job postings (JSearch, Apify, Playwright).
+3.  **Weighted Scoring (70/30):** Your score reflects your primary strength (70%) combined with your versatile breadth (30%), moving away from biased averages.
+4.  **Radar Gap Analysis:** Proportional radar charts that shrink specifically where the AI detects a concrete skill gap in your portfolio relative to current market demand.
 
 ---
 
-## Features
+## ✨ Features
 
-- **Daily profile scoring** — overall score plus per-role breakdown (ML Engineer, MLOps, DevOps, Backend)
-- **Skill gap tracker** — ranked by how often each skill appears in today's market
-- **Job matching** — top 10 jobs you match best, with reasons
-- **Trend charts** — score history over time so you can see yourself improving
-- **Skill heatmap** — what skills are trending in job postings this week
-- **Configurable targets** — set your roles, locations, and seniority from the UI
-- **Tiered scraping** — JSearch RapidAPI → Apify → direct scrapers, auto-fallback when quotas exhaust
-- **Zero AI cost** — runs on Gemini Flash 2.5 free tier (1,500 req/day)
-
----
-
-## Tech Stack
-
-| Layer            | Technology                                                                |
-| ---------------- | ------------------------------------------------------------------------- |
-| Frontend         | Next.js 14 (App Router) + SWR + Inline CSS (Bloomberg Terminal aesthetic) |
-| Backend          | FastAPI + APScheduler                                                     |
-| Database         | Supabase (PostgreSQL)                                                     |
-| AI Assessment    | Gemini Flash 2.5 (free tier)                                              |
-| Job Scraping     | JSearch RapidAPI + Apify + Playwright                                     |
-| GitHub Ingestion | GitHub GraphQL API v4                                                     |
-| Deployment       | Vercel (frontend) + Railway (backend)                                     |
+- **Weighted Profile Scoring** — Predictive engine favoring your top-performing roles (ML Engineer, MLOps, DevOps, etc.).
+- **Proportional Radar Chart** — Dynamic visual representation of your market coverage vs. skill gaps.
+- **Job Application Tracker** — Built-in kanban-style tracking for your applications and follow-ups.
+- **CV Analysis** — Upload your PDF resume to receive an AI-powered gap analysis against your target roles.
+- **Public Demo Mode** — Industry-standard security lockdown. Set `PUBLIC_DEMO_MODE=true` to deploy as a read-only portfolio piece without risking your API quotas.
+- **Advanced Config** — Custom role and location inputs with strict validation (1 Remote + 2 arbitrary text locations).
+- **Zero AI cost** — Optimized for Gemini Flash 2.5 free tier.
 
 ---
 
-## Getting Started
+## 🛠️ Tech Stack
+
+| Layer           | Technology                                                           |
+| --------------- | -------------------------------------------------------------------- |
+| **Frontend**    | Next.js 14 (App Router) + SWR + Lucide Icons + Bloomberg Terminal UI |
+| **Backend**     | FastAPI + Pydantic v2 + APScheduler                                  |
+| **Database**    | Supabase (PostgreSQL)                                                |
+| **AI Matching** | Gemini Flash 2.5 (JSON Mode) + Cosine Similarity                     |
+| **Scraping**    | JSearch (RapidAPI) + Apify + Playwright                              |
+| **GitHub**      | GraphQL API v4                                                       |
+| **Deployment**  | Vercel (Frontend) + Railway/Render (Backend)                         |
+
+---
+
+## 📦 Getting Started
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+
-- A free [Supabase](https://supabase.com) account
-- A free [Google AI Studio](https://aistudio.google.com) API key
-- A GitHub Personal Access Token (read:user, public_repo)
+- Python 3.10+ & Node.js 18+
+- [Supabase](https://supabase.com) Account (Postgres storage)
+- [Google AI Studio](https://aistudio.google.com) Key (Gemini Flash)
+- GitHub PAT (read-only access)
 
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/CosmicAlgo/careerradar
-cd careerradar
-```
-
-### 2. Set up the database
-
-In your Supabase project, go to SQL Editor and run the schema from [`docs/schema.sql`](docs/schema.sql).
-
-### 3. Configure environment
+### 1. Local Setup
 
 ```bash
-cp .env.example .env
+git clone https://github.com/CosmicAlgo/Career.git
+cd Career
+bash start.sh
 ```
 
-Fill in your keys — see `.env.example` for all required variables. The only keys you _need_ to get started are:
+### 2. Configure Environment
 
-```
+Create a `.env` in the root (see `.env.example` for full list):
+
+```ini
 GITHUB_TOKEN=ghp_...
 GITHUB_USERNAME=your-username
 GOOGLE_AI_API_KEY=AIza...
 SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
+PUBLIC_DEMO_MODE=false # Set to true for public deployments
 ```
 
-Everything else is optional and enables additional job sources.
+---
 
-### 4. Run locally
+## 🚢 Deployment Guide
 
-```bash
-bash start.sh
-```
+### Backend (Railway / Render)
 
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
-- API docs: http://localhost:8000/docs
+1.  Create a new project from your GitHub repo.
+2.  Set the **Root Directory** to `/backend`.
+3.  Add your environment variables.
+4.  Railway will automatically detect the `Dockerfile` and deploy.
 
-### 5. Trigger your first sync
+### Frontend (Vercel)
 
-Hit the **SYNC** button on the dashboard, or call the API directly:
-
-```bash
-curl -X POST http://localhost:8000/api/score/refresh
-```
-
-The pipeline runs automatically every day at 06:00 UTC after that.
+1.  Import your GitHub repo.
+2.  Set the **Root Directory** to `/frontend`.
+3.  Add `NEXT_PUBLIC_BACKEND_URL` pointing to your deployed backend.
+4.  Deploy.
 
 ---
 
-## Deployment
+## 🔒 Security: Public Demo Mode
 
-### Backend → Railway
+When deploying as a portfolio piece for recruiters:
 
-1. Push repo to GitHub
-2. New project on [railway.app](https://railway.app) → Deploy from GitHub repo
-3. Set root directory to `/backend`
-4. Add all env vars from your `.env` in the Railway dashboard
-5. Deploy
-
-### Frontend → Vercel
-
-1. Import repo on [vercel.com](https://vercel.com)
-2. Set root directory to `/frontend`
-3. Add `NEXT_PUBLIC_BACKEND_URL` pointing to your Railway backend URL
-4. Deploy
-
-Full self-hosting guide: [`docs/SELF_HOSTING.md`](docs/SELF_HOSTING.md)
+1.  Set `PUBLIC_DEMO_MODE=true` on the backend.
+2.  This automatically enables **FastAPI Dependency Injection** to block all mutating endpoints (`POST`, `PUT`, `DELETE`).
+3.  The Frontend UI will display a **Read-Only** badge and disable sync/save buttons to prevent strangers from overwriting your data or exhausting your API credits.
 
 ---
 
-## How I Built This
+## 📈 Roadmap
 
-I built CareerRadar because I was applying for ML Engineer roles in the UK and had no systematic way to know whether my GitHub profile matched what companies were actually hiring for. I was applying blind.
-
-The architecture went through a few iterations. The core insight was that the problem has two data sources — your profile and the market — and the intelligence layer just needs to compare them daily. GitHub's GraphQL API gives everything about your profile in one query. Job boards are messier, which is why the tiered scraping approach with automatic fallback was necessary.
-
-I chose Gemini Flash 2.5 over the Anthropic or OpenAI APIs specifically because it's free at the scale needed here (~5,000 tokens/day), has JSON response mode, and is fast enough for a daily cron job. The assessment prompt is designed to return structured JSON matching the `AssessmentResult` schema directly, which keeps the pipeline deterministic.
-
-The frontend uses a Bloomberg terminal aesthetic — dense, monospace, dark — because this is a data tool and should feel like one. SWR handles all data fetching so tab transitions are instant and the sync button triggers a cascade refetch automatically.
+- [x] CV/Resume Upload & Matching
+- [x] Application tracker & Stats
+- [ ] Email Daily Digest (Resend/SendGrid)
+- [ ] Multi-user Authentication (Supabase Auth)
+- [ ] Interview prep assistant based on local job matches
 
 ---
 
-## Roadmap
+## 📄 License
 
-- [ ] Email digest — daily score summary to your inbox
-- [ ] CV/resume upload and matching
-- [ ] Multi-user support with Supabase Auth
-- [ ] Slack/Discord bot integration
-- [ ] Interview tracker — log applications, track responses
-- [ ] Salary benchmarking by role and location
-
----
-
-## Contributing
-
-PRs welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup instructions.
-
-If CareerRadar helps your job search, consider starring the repo or [sponsoring on GitHub](https://github.com/sponsors/CosmicAlgo).
-
----
-
-## Licence
-
-MIT — use it, fork it, build on it.
-
----
+MIT — build on it, fork it, get hired.
 
 _Built by [Rahul Surya](https://github.com/CosmicAlgo) — MSc HPC & Data Science, University of Edinburgh_

@@ -14,7 +14,8 @@ import { SnapshotResponse, SkillTrendsResponse } from "@/lib/types";
 
 interface RadarCoverageChartProps {
   snapshot: SnapshotResponse | undefined;
-  skillTrends: SkillTrendsResponse | undefined;
+  skillTrends?: SkillTrendsResponse | undefined;
+  overrideRole?: string;
 }
 
 /*
@@ -52,6 +53,13 @@ const ROLE_MARKET_BASELINES: Record<string, Record<string, number>> = {
     Databases: 90,
     MLOps: 60,
     Infrastructure: 70,
+  },
+  hpc_engineer: {
+    "C++/Fortran": 95,
+    Parallelization: 95,
+    "Memory Opt": 90,
+    "Cloud/HPC": 80,
+    Profiling: 85,
   },
 };
 
@@ -119,6 +127,65 @@ const AXIS_GITHUB_KEYWORDS: Record<string, string[]> = {
   CSS: ["css", "tailwind", "sass", "styled-components"],
   Testing: ["jest", "pytest", "cypress", "vitest", "playwright"],
   Performance: ["lighthouse", "webpack", "vite", "turbopack", "performance"],
+  Parallelization: [
+    "mpi",
+    "openmp",
+    "cuda",
+    "tbb",
+    "pthreads",
+    "parallel",
+    "multithreading",
+    "threading",
+    "gpu",
+    "simd",
+    "intrinsic",
+  ],
+  "Memory Opt": [
+    "cache",
+    "memory",
+    "alignment",
+    "allocator",
+    "buffer",
+    "heap",
+    "stack",
+    "efficiency",
+    "performance",
+    "optimisation",
+  ],
+  "C++/Fortran": [
+    "cpp",
+    "c++",
+    "fortran",
+    "cmake",
+    "make",
+    "gcc",
+    "llvm",
+    "clang",
+  ],
+  "Cloud/HPC": [
+    "slurm",
+    "pbs",
+    "batch",
+    "cluster",
+    "node",
+    "supercomputer",
+    "grid",
+    "aws",
+    "azure",
+    "gcp",
+    "parallel-file-system",
+  ],
+  Profiling: [
+    "valgrind",
+    "gprof",
+    "nsight",
+    "profiler",
+    "tracing",
+    "perf",
+    "instrumentation",
+    "benchmarking",
+    "benchmark",
+  ],
 };
 
 function getGithubAxisScore(axis: string, snapshot: SnapshotResponse): number {
@@ -202,6 +269,7 @@ function buildChartData(
 export default function RadarCoverageChart({
   snapshot,
   skillTrends,
+  overrideRole,
 }: RadarCoverageChartProps) {
   if (!snapshot?.github_data) {
     return (
@@ -211,9 +279,10 @@ export default function RadarCoverageChart({
     );
   }
 
-  const selectedRoles: string[] =
-    (snapshot as any)?.settings?.target_roles ||
-    Object.keys(snapshot.assessment?.role_scores || {});
+  const selectedRoles: string[] = overrideRole
+    ? [overrideRole]
+    : (snapshot as any)?.settings?.target_roles ||
+      Object.keys(snapshot.assessment?.role_scores || {});
 
   const data = buildChartData(snapshot, skillTrends, selectedRoles);
   const primaryRole = selectedRoles[0] || "ml_engineer";

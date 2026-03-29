@@ -21,7 +21,11 @@ Your job is to:
 4. Surface the top 10 best-matching jobs with match percentage and reasons
 5. Identify trending skills appearing in today's postings
 
-IMPORTANT: The `role_scores` object MUST contain exactly the roles listed in TARGET ROLES with realistic non-zero scores based on the candidate's actual profile.
+IMPORTANT: The `role_scores` object MUST contain exactly the roles listed in TARGET ROLES.
+- Use realistic scores based on the candidate's actual profile.
+- Avoid assigning 0 to target roles if the candidate has transferable engineering skills (e.g., General Software Engineering, Infrastructure).
+- If no current market data matches a specific role exactly, evaluate against industry-standard baselines for that role.
+- If a profile is completely unrelated to a role, a low score (e.g. 10-30) is preferred over 0, unless there is zero evidence of any relevant skill.
 
 Respond ONLY with valid JSON matching the provided schema exactly.
 No markdown, no preamble, no explanation outside the JSON object."""

@@ -8,7 +8,7 @@ from datetime import date, datetime
 
 import asyncio
 
-from fastapi import APIRouter, HTTPException, Query, File, Form
+from fastapi import APIRouter, HTTPException, Query, File, Form, Depends
 from pydantic import BaseModel, ConfigDict
 
 from api.schemas import (
@@ -27,6 +27,18 @@ from api.schemas import (
 )
 from database.queries import get_db_queries
 from pipeline.daily_runner import run_daily_pipeline
+
+
+from config.settings import settings
+
+
+async def verify_demo_mode():
+    """Dependency to block mutations in public demo mode."""
+    if settings.public_demo_mode:
+        raise HTTPException(
+            status_code=403,
+            detail="Action disabled: This application is running in Public Demo Mode.",
+        )
 
 
 router = APIRouter()
@@ -286,7 +298,12 @@ async def get_skill_trends(
 # ============ Refresh/Trigger Routes ============
 
 
-@router.post("/api/score/refresh", response_model=RefreshResponse, tags=["Refresh"])
+@router.post(
+    "/api/score/refresh",
+    response_model=RefreshResponse,
+    tags=["Refresh"],
+    dependencies=[Depends(verify_demo_mode)],
+)
 async def trigger_refresh(request: RefreshRequest = RefreshRequest()):
     """
     Manually trigger a pipeline refresh.
@@ -316,7 +333,12 @@ async def trigger_refresh(request: RefreshRequest = RefreshRequest()):
     )
 
 
-@router.post("/api/trigger/daily", response_model=RefreshResponse, tags=["Refresh"])
+@router.post(
+    "/api/trigger/daily",
+    response_model=RefreshResponse,
+    tags=["Refresh"],
+    dependencies=[Depends(verify_demo_mode)],
+)
 async def trigger_daily_pipeline(
     force: bool = Query(
         default=False, description="Force run even if already completed today"
@@ -343,6 +365,7 @@ class PipelineStatus(BaseModel):
     latest_snapshot_time: Optional[str] = None  # HH:MM string for navbar
     total_snapshots: int
     jobs_today: int
+    public_demo_mode: bool = False
 
 
 @router.get("/api/status", response_model=PipelineStatus, tags=["Status"])
@@ -383,6 +406,7 @@ async def get_pipeline_status():
         latest_snapshot_time=latest_time,
         total_snapshots=len(snapshots),
         jobs_today=jobs_today,
+        public_demo_mode=settings.public_demo_mode,
     )
 
 
@@ -471,7 +495,12 @@ from api.cv_schemas import (
 from pipeline.cv_processor import cv_processor, cv_matcher
 
 
-@router.post("/api/cv/upload", response_model=CVUploadResponse, tags=["CV"])
+@router.post(
+    "/api/cv/upload",
+    response_model=CVUploadResponse,
+    tags=["CV"],
+    dependencies=[Depends(verify_demo_mode)],
+)
 async def upload_cv(
     file: bytes = File(...),
     filename: str = Form(...),
@@ -548,7 +577,12 @@ async def list_cvs():
         raise HTTPException(status_code=500, detail=f"Failed to list CVs: {str(e)}")
 
 
-@router.delete("/api/cv/{cv_id}", response_model=CVDeleteResponse, tags=["CV"])
+@router.delete(
+    "/api/cv/{cv_id}",
+    response_model=CVDeleteResponse,
+    tags=["CV"],
+    dependencies=[Depends(verify_demo_mode)],
+)
 async def delete_cv(cv_id: str):
     """Delete a processed CV."""
     try:
@@ -561,7 +595,10 @@ async def delete_cv(cv_id: str):
 
 
 @router.post(
-    "/api/applications", response_model=ApplicationResponse, tags=["Applications"]
+    "/api/applications",
+    response_model=ApplicationResponse,
+    tags=["Applications"],
+    dependencies=[Depends(verify_demo_mode)],
 )
 async def create_application(request: CreateApplicationRequest):
     """Create a new job application."""
@@ -602,6 +639,7 @@ async def get_applications():
     "/api/applications/{application_id}",
     response_model=ApplicationResponse,
     tags=["Applications"],
+    dependencies=[Depends(verify_demo_mode)],
 )
 async def update_application(application_id: str, request: UpdateApplicationRequest):
     """Update a job application."""
@@ -622,7 +660,11 @@ async def update_application(application_id: str, request: UpdateApplicationRequ
         )
 
 
-@router.delete("/api/applications/{application_id}", tags=["Applications"])
+@router.delete(
+    "/api/applications/{application_id}",
+    tags=["Applications"],
+    dependencies=[Depends(verify_demo_mode)],
+)
 async def delete_application(application_id: str):
     """Delete a job application."""
     try:
@@ -713,7 +755,12 @@ async def get_user_settings():
     return await manager.get_settings()
 
 
-@router.post("/api/settings", response_model=UserSettings, tags=["Settings"])
+@router.post(
+    "/api/settings",
+    response_model=UserSettings,
+    tags=["Settings"],
+    dependencies=[Depends(verify_demo_mode)],
+)
 async def update_user_settings(settings: UserSettings):
     """Update user settings in Supabase."""
     manager = get_settings_manager()

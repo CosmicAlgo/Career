@@ -1,11 +1,12 @@
 "use client";
+import { useState, useEffect } from "react";
 
 import Navbar from "@/components/Navbar";
 import ScoreCard from "@/components/ScoreCard";
 import SkillHeatmap from "@/components/SkillHeatmap";
 import GapList from "@/components/GapList";
 import RadarCoverageChart from "@/components/RadarCoverageChart";
-import { useDashboard } from "@/lib/swr-hooks";
+import { useDashboard, useSettings } from "@/lib/swr-hooks";
 import {
   ScoreCardSkeleton,
   HeatmapSkeleton,
@@ -17,6 +18,24 @@ import { Github, TrendingUp, Target, Plus, CheckCircle2 } from "lucide-react";
 export default function Dashboard() {
   const { score, snapshot, skillTrends, gaps, isLoading, error, mutate } =
     useDashboard();
+  const { settings } = useSettings();
+
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+
+  // Set initial selected role to the one with the highest score
+  useEffect(() => {
+    if (score?.role_scores && !selectedRole) {
+      const roles = Object.entries(score.role_scores).sort(
+        (a, b) => (b[1] as number) - (a[1] as number),
+      );
+
+      if (roles.length > 0) {
+        setSelectedRole(roles[0][0]);
+      }
+    } else if (settings?.target_roles && !selectedRole) {
+      setSelectedRole(settings.target_roles[0]);
+    }
+  }, [score, settings, selectedRole]);
 
   if (error && !score && !snapshot) {
     return (
@@ -112,17 +131,31 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
             <ScoreCard
               title="Overall Score"
-              score={score?.overall_score || 0}
+              score={score?.overall_score ?? undefined}
               size="md"
+              isSelected={selectedRole === "overall"}
+              onClick={() => setSelectedRole("overall")}
             />
-            {roleScoreEntries.map(([roleKey, roleScore]) => (
-              <ScoreCard
-                key={roleKey}
-                title={roleKey.replace(/_/g, " ").toUpperCase()}
-                score={roleScore as number}
-                size="sm"
-              />
-            ))}
+            {Array.from(
+              new Set([
+                ...(settings?.target_roles || []),
+                ...Object.keys(score?.role_scores || {}).filter(
+                  (r) => r !== "overall",
+                ),
+              ]),
+            ).map((roleKey) => {
+              const roleScore = (score?.role_scores as any)?.[roleKey];
+              return (
+                <ScoreCard
+                  key={roleKey}
+                  title={roleKey.replace(/_/g, " ").toUpperCase()}
+                  score={roleScore}
+                  size="sm"
+                  isSelected={selectedRole === roleKey}
+                  onClick={() => setSelectedRole(roleKey)}
+                />
+              );
+            })}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -191,6 +224,7 @@ export default function Dashboard() {
                     <RadarCoverageChart
                       snapshot={snapshot}
                       skillTrends={skillTrends}
+                      overrideRole={selectedRole || undefined}
                     />
                   </div>
                 </>

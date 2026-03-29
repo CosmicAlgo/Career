@@ -10,6 +10,7 @@ import { Loader2, RefreshCw, Radar } from "lucide-react";
 export default function Navbar() {
   const pathname = usePathname();
   const { status, mutate: mutateStatus } = usePipelineStatus();
+  const isDemoMode = status?.public_demo_mode || false;
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -24,7 +25,7 @@ export default function Navbar() {
   }, [toast]);
 
   async function handleRefresh() {
-    if (isRefreshing) return;
+    if (isRefreshing || isDemoMode) return;
     setIsRefreshing(true);
     try {
       await triggerSync(true);
@@ -58,17 +59,17 @@ export default function Navbar() {
       month: "short",
     });
     const timeStr = (status as any).latest_snapshot_time as string | undefined;
-    
+
     // Check if the time string looks like an ISO string or just HH:MM
     if (timeStr && timeStr.includes("T")) {
       const timeDate = new Date(timeStr);
       const localTime = timeDate.toLocaleTimeString("en-GB", {
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
       });
       return `${dateStr} · ${localTime}`;
     }
-    
+
     return timeStr ? `${dateStr} · ${timeStr}` : dateStr;
   })();
 
@@ -77,12 +78,19 @@ export default function Navbar() {
       <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
-              <Radar className="h-6 w-6 text-primary group-hover:animate-pulse" />
-              <span className="font-display text-lg font-bold text-foreground tracking-tight">
-                CareerRadar
-              </span>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-2 group">
+                <Radar className="h-6 w-6 text-primary group-hover:animate-pulse" />
+                <span className="font-display text-lg font-bold text-foreground tracking-tight">
+                  CareerRadar
+                </span>
+              </Link>
+              {isDemoMode && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-tighter">
+                  Read Only
+                </span>
+              )}
+            </div>
 
             <div className="flex items-center gap-1 hidden md:flex">
               {navItems.map((item) => {
@@ -126,12 +134,17 @@ export default function Navbar() {
               </div>
               <button
                 onClick={handleRefresh}
-                disabled={isRefreshing}
+                disabled={isRefreshing || isDemoMode}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground font-mono text-xs font-medium transition-all ${
-                  isRefreshing
+                  isRefreshing || isDemoMode
                     ? "cursor-not-allowed opacity-50"
                     : "hover:bg-accent hover:text-foreground"
                 }`}
+                title={
+                  isDemoMode
+                    ? "Sync disabled in demo mode"
+                    : "Trigger pipeline sync"
+                }
               >
                 {isRefreshing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
