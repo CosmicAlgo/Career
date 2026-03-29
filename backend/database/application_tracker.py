@@ -224,7 +224,7 @@ class ApplicationTracker:
             start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
             end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
             return (end - start).days
-        except:
+        except Exception:
             return 0
 
     async def delete_application(self, application_id: str) -> bool:

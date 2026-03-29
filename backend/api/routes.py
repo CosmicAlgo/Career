@@ -27,7 +27,25 @@ from api.schemas import (
 )
 from database.queries import get_db_queries
 from pipeline.daily_runner import run_daily_pipeline
-
+from api.application_schemas import (
+    JobApplication,
+    CreateApplicationRequest,
+    UpdateApplicationRequest,
+    ApplicationResponse,
+    ApplicationsResponse,
+    ApplicationStats,
+    ApplicationStatsResponse,
+    FollowUpResponse,
+)
+from database.application_tracker import application_tracker
+from api.cv_schemas import (
+    CVUploadResponse,
+    CVAnalysisRequest,
+    CVListResponse,
+    CVDeleteResponse,
+)
+from pipeline.cv_processor import cv_processor, cv_matcher
+from api.settings import UserSettings, get_settings_manager
 
 from config.settings import settings
 
@@ -471,28 +489,8 @@ async def get_pipeline_history(
 
 # ============ Application Tracker Routes ============
 
-from api.application_schemas import (
-    JobApplication,
-    CreateApplicationRequest,
-    UpdateApplicationRequest,
-    ApplicationResponse,
-    ApplicationsResponse,
-    ApplicationStats,
-    ApplicationStatsResponse,
-    FollowUpResponse,
-)
-from database.application_tracker import application_tracker
-
 
 # ============ CV Processing Routes ============
-
-from api.cv_schemas import (
-    CVUploadResponse,
-    CVAnalysisRequest,
-    CVListResponse,
-    CVDeleteResponse,
-)
-from pipeline.cv_processor import cv_processor, cv_matcher
 
 
 @router.post(
@@ -522,16 +520,15 @@ async def upload_cv(
 
         # Store CV data in database (optional - for history)
         try:
-            cv_record = {
-                "filename": filename,
-                "cv_data": cv_data,
-                "analysis": analysis,
-                "target_roles": target_roles,
-                "processed_at": datetime.utcnow().isoformat(),
-            }
-
+            pass
             # This would require a cv_uploads table - for now just return the data
-            # response = supabase_manager.client.table('cv_uploads').insert(cv_record).execute()
+            # response = supabase_manager.client.table('cv_uploads').insert({
+            #     "filename": filename,
+            #     "cv_data": cv_data,
+            #     "analysis": analysis,
+            #     "target_roles": target_roles,
+            #     "processed_at": datetime.utcnow().isoformat(),
+            # }).execute()
 
         except Exception as e:
             print(f"[CV Upload] Warning: Could not save to database: {e}")
@@ -744,8 +741,6 @@ async def get_follow_ups(days_ahead: int = Query(default=0, ge=0, le=30)):
 
 
 # ============ Settings Routes ============
-
-from api.settings import UserSettings, get_settings_manager
 
 
 @router.get("/api/settings", response_model=UserSettings, tags=["Settings"])

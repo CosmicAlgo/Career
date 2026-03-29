@@ -327,7 +327,7 @@ class CVProcessor:
 
         # Skills scoring (40 points)
         skills_score = 0
-        total_skill_categories = len(self.tech_skills)
+
         found_categories = len(skills)
 
         if found_categories >= 3:
@@ -674,7 +674,6 @@ class CVMatcher:
         cv_skill_list = []
         for category, skills in cv_skills.items():
             cv_skill_list.extend(skills)
-        cv_skill_set = set([s.lower() for s in cv_skill_list])
 
         market_skills = market_data.get("market_skills", {})
         total_market_jobs = market_data.get("total_jobs_analyzed", 0)

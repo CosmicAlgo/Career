@@ -27,9 +27,9 @@ class WellfoundScraper(BaseScraper):
     def is_available(self) -> bool:
         """Available if Playwright is installed."""
         try:
-            import playwright
+            import importlib.util
 
-            return True
+            return importlib.util.find_spec("playwright") is not None
         except ImportError:
             return False
 

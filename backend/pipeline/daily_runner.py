@@ -489,7 +489,7 @@ class DailyPipelineRunner:
                     error=str(e),
                     total_duration_ms=int((time.time() - pipeline_start) * 1000),
                 )
-            except:
+            except Exception:
                 pass
 
             raise

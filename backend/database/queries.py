@@ -123,9 +123,8 @@ class DatabaseQueries:
                 job_dicts.append(job_dict)
 
             # Upsert with conflict resolution on id
-            response = (
-                self.client.table("jobs").upsert(job_dicts, on_conflict="id").execute()
-            )
+            self.client.table("jobs").upsert(job_dicts, on_conflict="id").execute()
+
 
             return True
         except Exception as e:
@@ -174,15 +173,12 @@ class DatabaseQueries:
         try:
             if keep_latest_n == 0:
                 # Delete all jobs (clear the table)
-                response = self.client.table("jobs").delete().neq("id", "").execute()
+                self.client.table("jobs").delete().neq("id", "").execute()
             elif before_date:
                 # Delete jobs before specific date
-                response = (
-                    self.client.table("jobs")
-                    .delete()
-                    .lt("posted_date", before_date.isoformat())
-                    .execute()
-                )
+                self.client.table("jobs").delete().lt(
+                    "posted_at", before_date.isoformat()
+                ).execute()
             else:
                 return True
 
@@ -210,11 +206,9 @@ class DatabaseQueries:
                 for skill in skills
             ]
 
-            response = (
-                self.client.table("skill_trends")
-                .upsert(trend_dicts, on_conflict="date,skill")
-                .execute()
-            )
+            self.client.table("skill_trends").upsert(
+                trend_dicts, on_conflict="date,skill"
+            ).execute()
 
             return True
         except Exception as e:
@@ -263,11 +257,9 @@ class DatabaseQueries:
                 for role, score in role_scores.items()
             ]
 
-            response = (
-                self.client.table("role_scores")
-                .upsert(score_dicts, on_conflict="date,role")
-                .execute()
-            )
+            self.client.table("role_scores").upsert(
+                score_dicts, on_conflict="date,role"
+            ).execute()
 
             return True
         except Exception as e:

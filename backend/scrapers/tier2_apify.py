@@ -236,9 +236,9 @@ class ApifyScraper(BaseScraper):
                     try:
                         posted_at = datetime.strptime(date_text, fmt)
                         break
-                    except:
+                    except Exception:
                         continue
-            except:
+            except Exception:
                 pass
 
         # Build location string
@@ -274,7 +274,7 @@ class ApifyScraper(BaseScraper):
         if date_text:
             try:
                 posted_at = datetime.fromisoformat(date_text.replace("Z", "+00:00"))
-            except:
+            except Exception:
                 pass
 
         # Build description from requirements/description

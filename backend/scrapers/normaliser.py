@@ -246,7 +246,6 @@ class JobNormaliser:
             return set(), set()
 
         text_lower = text.lower()
-        words = set(re.findall(r"\b\w+\b", text_lower))
 
         # Required skills appear in title or early in description
         required: Set[str] = set()

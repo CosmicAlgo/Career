@@ -27,9 +27,9 @@ class OttaScraper(BaseScraper):
     def is_available(self) -> bool:
         """Available if Playwright is installed."""
         try:
-            import playwright
+            import importlib.util
 
-            return True
+            return importlib.util.find_spec("playwright") is not None
         except ImportError:
             return False
 
@@ -177,7 +177,7 @@ class OttaScraper(BaseScraper):
                     if cookie_btn:
                         await cookie_btn.click()
                         await page.wait_for_timeout(1000)
-                except:
+                except Exception:
                     pass
 
                 # Scroll to load more jobs

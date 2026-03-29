@@ -5,6 +5,7 @@ Entry point with APScheduler for daily pipeline
 
 from contextlib import asynccontextmanager
 from datetime import datetime
+import logging
 
 import sentry_sdk
 from fastapi import FastAPI
@@ -22,7 +23,6 @@ from utils.logging_config import configure_logging
 configure_logging(
     level=settings.log_level if hasattr(settings, "log_level") else "INFO"
 )
-import logging
 
 logger = logging.getLogger(__name__)
 

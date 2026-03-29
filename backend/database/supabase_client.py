@@ -38,12 +38,9 @@ class SupabaseManager:
         """Check Supabase connection health."""
         try:
             # Try a simple query to verify connection
-            response = (
-                self.client.table("snapshots")
-                .select("count", count="exact")
-                .limit(0)
-                .execute()
-            )
+            self.client.table("snapshots").select("count", count="exact").limit(
+                1
+            ).execute()
             return True
         except Exception:
             return False

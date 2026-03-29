@@ -158,7 +158,7 @@ class SimplifyScraper(BaseScraper):
                     text = found.get_text(strip=True)
                     if text:
                         return text
-            except:
+            except Exception:
                 continue
         return None
 
