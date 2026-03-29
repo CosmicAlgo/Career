@@ -38,7 +38,7 @@ jobs:
       - name: Run pip-audit
         working-directory: ./backend
         run: |
-          pip-audit --requirement requirements.txt --audit-level=high
+          pip-audit --requirement requirements.txt
 
   npm-audit:
     name: Node.js Dependency Audit
