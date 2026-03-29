@@ -307,7 +307,9 @@ async def compute_local_ml_scores(
 
     logger.info(f"[ML Scorer] Role scores: {role_scores}")
     logger.info(
-        f"[ML Scorer] Top 5 job matches: {sorted(job_scores.items(), key=lambda x: x[1], reverse=True)[:5]}"
+        f"[ML Scorer] Top 5 job matches: {sorted(job_scores.items(), key=lambda x: x[
+                1
+            ], reverse=True)[:5]}"
     )
 
     return role_scores, job_scores, skill_gaps
