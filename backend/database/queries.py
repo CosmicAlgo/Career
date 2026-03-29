@@ -125,7 +125,6 @@ class DatabaseQueries:
             # Upsert with conflict resolution on id
             self.client.table("jobs").upsert(job_dicts, on_conflict="id").execute()
 
-
             return True
         except Exception as e:
             print(f"Error upserting jobs: {e}")

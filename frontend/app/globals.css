@@ -80,11 +80,8 @@
 }
 
 .terminal-grid {
-  background-image: linear-gradient(
-      to right,
-      var(--terminal-grid) 1px,
-      transparent 1px
-    ),
+  background-image:
+    linear-gradient(to right, var(--terminal-grid) 1px, transparent 1px),
     linear-gradient(to bottom, var(--terminal-grid) 1px, transparent 1px);
   background-size: 20px 20px;
 }

@@ -117,30 +117,30 @@ def build_user_prompt(
     # Build GitHub summary section
     github_section = f"""
 GITHUB PROFILE SUMMARY:
-Username: {github_summary.get('username', 'N/A')}
-Total Repos: {github_summary.get('total_repos', 0)}
-Public Repos: {github_summary.get('public_repos', 0)}
-Followers: {github_summary.get('followers', 0)}
-Languages: {json.dumps(github_summary.get('languages', {}), indent=2)}
+Username: {github_summary.get("username", "N/A")}
+Total Repos: {github_summary.get("total_repos", 0)}
+Public Repos: {github_summary.get("public_repos", 0)}
+Followers: {github_summary.get("followers", 0)}
+Languages: {json.dumps(github_summary.get("languages", {}), indent=2)}
 Top Repositories:
 """
 
     for repo in github_summary.get("top_repos", []):
         github_section += f"""
-  - {repo.get('name', 'Unknown')}: {repo.get('stars', 0)} stars
-    Description: {repo.get('description', 'N/A')}
-    Language: {repo.get('language', 'N/A')}
-    Topics: {', '.join(repo.get('topics', []))}
+  - {repo.get("name", "Unknown")}: {repo.get("stars", 0)} stars
+    Description: {repo.get("description", "N/A")}
+    Language: {repo.get("language", "N/A")}
+    Topics: {", ".join(repo.get("topics", []))}
 """
 
     contribution = github_summary.get("contribution_stats", {})
     github_section += f"""
 Contribution Stats:
-- Total commits (last 90 days): {contribution.get('total_commits_last_90d', 0)}
-- Current streak: {contribution.get('contribution_streak', 0)} days
-- Total PRs: {contribution.get('total_prs', 0)}
+- Total commits (last 90 days): {contribution.get("total_commits_last_90d", 0)}
+- Current streak: {contribution.get("contribution_streak", 0)} days
+- Total PRs: {contribution.get("total_prs", 0)}
 
-Certifications Detected: {', '.join(github_summary.get('certifications_detected', []))}
+Certifications Detected: {", ".join(github_summary.get("certifications_detected", []))}
 """
 
     # Build job listings section
@@ -149,19 +149,19 @@ Certifications Detected: {', '.join(github_summary.get('certifications_detected'
     for i, job in enumerate(job_listings[:20], 1):  # Limit to 20 jobs for token budget
         jobs_section += f"""
 Job {i}:
-- ID: {job.get('id', f'job-{i}')}
-- Title: {job.get('title', 'Unknown')}
-- Company: {job.get('company', 'Unknown')}
-- Location: {job.get('location', 'N/A')}
-- Remote: {job.get('remote', False)}
-- Required Skills: {', '.join(job.get('required_skills', []))}
-- Nice to Have: {', '.join(job.get('nice_to_have', []))}
-- Seniority: {job.get('seniority', 'N/A')}
+- ID: {job.get("id", f"job-{i}")}
+- Title: {job.get("title", "Unknown")}
+- Company: {job.get("company", "Unknown")}
+- Location: {job.get("location", "N/A")}
+- Remote: {job.get("remote", False)}
+- Required Skills: {", ".join(job.get("required_skills", []))}
+- Nice to Have: {", ".join(job.get("nice_to_have", []))}
+- Seniority: {job.get("seniority", "N/A")}
 """
 
     # Build target roles section
     roles_section = f"""
-TARGET ROLES: {', '.join(target_roles)}
+TARGET ROLES: {", ".join(target_roles)}
 ASSESSMENT DATE: {assessment_date}
 """
 

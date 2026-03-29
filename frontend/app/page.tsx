@@ -138,15 +138,24 @@ export default function Dashboard() {
             />
             {Array.from(
               new Set([
-                ...(settings?.target_roles || []).map(r => r.toLowerCase().replace(/ /g, "_")),
-                ...Object.keys(score?.role_scores || {}).map(r => r.toLowerCase().replace(/ /g, "_")).filter(r => r !== "overall"),
+                ...(settings?.target_roles || []).map((r) =>
+                  r.toLowerCase().replace(/ /g, "_"),
+                ),
+                ...Object.keys(score?.role_scores || {})
+                  .map((r) => r.toLowerCase().replace(/ /g, "_"))
+                  .filter((r) => r !== "overall"),
               ]),
             ).map((roleSlug) => {
               // Try exact match then check if any key in score.role_scores matches this slug
-              const originalScoreKey = score?.role_scores ? 
-                Object.keys(score.role_scores).find(k => k.toLowerCase().replace(/ /g, "_") === roleSlug) : null;
-              const roleScore = originalScoreKey ? (score?.role_scores as any)[originalScoreKey] : undefined;
-              
+              const originalScoreKey = score?.role_scores
+                ? Object.keys(score.role_scores).find(
+                    (k) => k.toLowerCase().replace(/ /g, "_") === roleSlug,
+                  )
+                : null;
+              const roleScore = originalScoreKey
+                ? (score?.role_scores as any)[originalScoreKey]
+                : undefined;
+
               return (
                 <ScoreCard
                   key={roleSlug}

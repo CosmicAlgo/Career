@@ -107,7 +107,9 @@ async def get_current_score():
 
 @router.get("/api/score/trends", response_model=TrendsResponse, tags=["Scores"])
 async def get_score_trends(
-    days: int = Query(default=30, ge=1, le=365, description="Number of days of history")
+    days: int = Query(
+        default=30, ge=1, le=365, description="Number of days of history"
+    ),
 ):
     """Get score trends over time."""
     db = get_db_queries()
@@ -161,7 +163,7 @@ async def get_jobs(
 
 @router.get("/api/jobs/latest", response_model=JobsResponse, tags=["Jobs"])
 async def get_latest_jobs(
-    limit: int = Query(default=100, ge=1, le=500, description="Maximum jobs to return")
+    limit: int = Query(default=100, ge=1, le=500, description="Maximum jobs to return"),
 ):
     """Get the most recently scraped job listings."""
     db = get_db_queries()
@@ -230,7 +232,9 @@ async def get_snapshot_by_date(snapshot_date: date):
 
 @router.get("/api/snapshot", response_model=List[SnapshotResponse], tags=["Snapshots"])
 async def get_snapshot_history(
-    days: int = Query(default=30, ge=1, le=365, description="Number of days of history")
+    days: int = Query(
+        default=30, ge=1, le=365, description="Number of days of history"
+    ),
 ):
     """Get snapshot history."""
     db = get_db_queries()
@@ -459,7 +463,7 @@ class PipelineHistoryResponse(BaseModel):
     "/api/pipeline/history", response_model=PipelineHistoryResponse, tags=["Pipeline"]
 )
 async def get_pipeline_history(
-    limit: int = Query(default=10, ge=1, le=50, description="Number of runs to return")
+    limit: int = Query(default=10, ge=1, le=50, description="Number of runs to return"),
 ):
     """Get pipeline execution history with timing metrics."""
     db = get_db_queries()
